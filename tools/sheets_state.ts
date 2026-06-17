@@ -8,7 +8,8 @@ export enum JobStatus {
     APPLYING = 'APPLYING',
     APPLIED = 'APPLIED',
     FAILED = 'FAILED',
-    SKIPPED = 'SKIPPED'
+    SKIPPED = 'SKIPPED',
+    ERROR = 'ERROR'
 }
 
 export interface JobRecord {
@@ -62,12 +63,21 @@ export class SheetsStateManager {
         return this.sheet;
     }
 
+    private cachedRows: any[] | null = null;
+
+    private async loadRowsFromCache() {
+        if (!this.cachedRows) {
+            const sheet = this.ensureSheet();
+            this.cachedRows = await sheet.getRows();
+        }
+        return this.cachedRows;
+    }
+
     /**
      * Checks if a job URL has already been processed to ensure idempotency.
      */
     async isJobProcessed(jobUrlHash: string): Promise<boolean> {
-        const sheet = this.ensureSheet();
-        const rows = await sheet.getRows();
+        const rows = await this.loadRowsFromCache();
         return rows.some(row => row.get('ID') === jobUrlHash);
     }
 
@@ -77,21 +87,25 @@ export class SheetsStateManager {
     async addPendingJob(job: JobRecord): Promise<void> {
         const sheet = this.ensureSheet();
         console.log(`Added pending job: ${job.company} - ${job.role}`);
-        await sheet.addRow({
+        const newRow = await sheet.addRow({
             ID: job.id,
             Company: job.company,
             Role: job.role,
             URL: job.url,
             Status: job.status
         });
+        
+        // Update cache
+        if (this.cachedRows) {
+            this.cachedRows.push(newRow);
+        }
     }
 
     /**
      * Updates the job score and moves it to Evaluated/Applied.
      */
     async updateJobStatus(jobId: string, status: JobStatus, score?: number, reasoning?: string): Promise<void> {
-        const sheet = this.ensureSheet();
-        const rows = await sheet.getRows();
+        const rows = await this.loadRowsFromCache();
         const row = rows.find(r => r.get('ID') === jobId);
         
         if (row) {
@@ -109,8 +123,7 @@ export class SheetsStateManager {
      * Retrieves all jobs with a specific status.
      */
     async getJobsByStatus(status: JobStatus): Promise<any[]> {
-        const sheet = this.ensureSheet();
-        const rows = await sheet.getRows();
+        const rows = await this.loadRowsFromCache();
         return rows.filter(row => row.get('Status') === status);
     }
 }

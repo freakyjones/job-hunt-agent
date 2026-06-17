@@ -85,28 +85,46 @@ async function main() {
             const company = row.get('Company');
             
             console.log(`Evaluating ${company} - ${role}...`);
-            try {
-                // In a production app, the Scraper would save the full Description to a DB/Sheet.
-                // For this demo, we simulate the JD text for WWR jobs if we didn't scrape Lever.
-                const dummyJob = `Job at ${company} for ${role}. We need a remote developer with strong frontend skills.`;
-                
-                const result = await agent.evaluateJob(dummyJob, resumeText);
-                console.log(`Score: ${result.score}/100`);
-                
-                await sheets.updateJobStatus(id, JobStatus.EVALUATED, result.score, result.matchReason);
+            let success = false;
+            let attempts = 0;
+            const maxAttempts = 3;
 
-                // Anti-Rate-Limit Delay for Gemini Free Tier (15 Requests Per Minute max)
-                console.log("Waiting 15 seconds to respect Gemini API rate limits...");
-                await new Promise(resolve => setTimeout(resolve, 15000));
+            while (!success && attempts < maxAttempts) {
+                try {
+                    attempts++;
+                    // In a production app, the Scraper would save the full Description to a DB/Sheet.
+                    const dummyJob = `Job at ${company} for ${role}. We need a remote developer with strong frontend skills.`;
+                    
+                    const result = await agent.evaluateJob(dummyJob, resumeText);
+                    console.log(`Score: ${result.score}/100`);
+                    
+                    await sheets.updateJobStatus(id, JobStatus.EVALUATED, result.score, result.matchReason);
+                    success = true;
 
-            } catch (e: any) {
-                console.error(`Evaluation failed for ${url}:`, e.message);
-                
-                // If it failed due to 429 quota, we should back off significantly
-                if (e.message.includes('429')) {
-                    console.log("Hit rate limit. Waiting 60 seconds before continuing...");
-                    await new Promise(resolve => setTimeout(resolve, 60000));
+                    // Anti-Rate-Limit Delay for Gemini Free Tier (15 Requests Per Minute max)
+                    console.log("Waiting 15 seconds to respect Gemini API rate limits...");
+                    await new Promise(resolve => setTimeout(resolve, 15000));
+
+                } catch (e: any) {
+                    console.error(`Evaluation failed for ${url} (Attempt ${attempts}):`, e.message);
+                    
+                    if (e.message.includes('429')) {
+                        const backoff = 30000 * Math.pow(2, attempts - 1); // 30s, 60s, 120s
+                        console.log(`Hit rate limit. Exponential backoff: Waiting ${backoff/1000} seconds...`);
+                        await new Promise(resolve => setTimeout(resolve, backoff));
+                    } else if (e.message.includes('503')) {
+                        console.log(`Service unavailable. Waiting 30 seconds...`);
+                        await new Promise(resolve => setTimeout(resolve, 30000));
+                    } else {
+                        // For parsing errors or fatal errors, don't retry.
+                        break; 
+                    }
                 }
+            }
+
+            if (!success) {
+                console.log(`Marking job ${id} as ERROR after ${attempts} attempts.`);
+                await sheets.updateJobStatus(id, JobStatus.ERROR);
             }
         }
         

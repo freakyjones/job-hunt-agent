@@ -77,8 +77,21 @@ export class JobHuntAgent {
             throw new Error('Gemini failed to return text.');
         }
 
-        const result: EvaluationResult = JSON.parse(response.text);
-        return result;
+        try {
+            // Cleanup: Sometimes Gemini wraps JSON in markdown blocks despite the application/json mime type
+            let rawText = response.text.trim();
+            if (rawText.startsWith('```json')) {
+                rawText = rawText.replace(/^```json\n/, '').replace(/\n```$/, '');
+            } else if (rawText.startsWith('```')) {
+                rawText = rawText.replace(/^```\n/, '').replace(/\n```$/, '');
+            }
+
+            const result: EvaluationResult = JSON.parse(rawText);
+            return result;
+        } catch (error) {
+            console.error("JSON Parsing failed. Raw response:", response.text);
+            throw new Error('Gemini returned malformed JSON.');
+        }
     }
 
     /**

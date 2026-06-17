@@ -50,6 +50,7 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
 
     const pendingJobs = jobs.filter(j => j.status === 'PENDING' || j.status === 'EVALUATED');
     const notifiedJobs = jobs.filter(j => j.status === 'NOTIFIED');
+    const errorJobs = jobs.filter(j => j.status === 'ERROR');
 
     return (
         <div className={styles.container}>
@@ -67,15 +68,19 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
             <div className={styles.stats}>
                 <div className={`glass-panel ${styles.statCard} animate-fade-in`}>
                     <div className={styles.statValue}>{jobs.length}</div>
-                    <div className={styles.statLabel}>Total Jobs Evaluated</div>
+                    <div className={styles.statLabel}>Total Jobs Scraped</div>
                 </div>
                 <div className={`glass-panel ${styles.statCard} animate-fade-in`} style={{ animationDelay: '0.1s' }}>
                     <div className={styles.statValue}>{notifiedJobs.length}</div>
-                    <div className={styles.statLabel}>High Matches Notified</div>
+                    <div className={styles.statLabel}>High Matches</div>
                 </div>
                 <div className={`glass-panel ${styles.statCard} animate-fade-in`} style={{ animationDelay: '0.2s' }}>
                     <div className={styles.statValue}>{pendingJobs.length}</div>
-                    <div className={styles.statLabel}>Pending Review</div>
+                    <div className={styles.statLabel}>Pending</div>
+                </div>
+                <div className={`glass-panel ${styles.statCard} animate-fade-in`} style={{ animationDelay: '0.3s' }}>
+                    <div className={styles.statValue} style={{ color: 'var(--danger)' }}>{errorJobs.length}</div>
+                    <div className={styles.statLabel}>Errors</div>
                 </div>
             </div>
 
@@ -92,20 +97,26 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
                                 <h3 className={styles.jobTitle}>{job.role}</h3>
                                 <p className={styles.jobCompany}>{job.company}</p>
                             </div>
-                            <div className={styles.scoreBadge} data-high={job.score >= 80}>
-                                {job.score}/100
-                            </div>
+                            {job.status === 'ERROR' ? (
+                                <div className={styles.scoreBadge} style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171' }}>
+                                    ERR
+                                </div>
+                            ) : (
+                                <div className={styles.scoreBadge} data-high={job.score >= 80}>
+                                    {job.score}/100
+                                </div>
+                            )}
                         </div>
 
                         <div className={styles.reasoning}>
-                            {job.reasoning || "Evaluation pending..."}
+                            {job.reasoning || (job.status === 'ERROR' ? "Failed to evaluate (Rate limit or Parsing error)." : "Evaluation pending...")}
                         </div>
 
                         <div className={styles.actions}>
                             <a href={job.url} target="_blank" rel="noreferrer" className="button button-primary">
                                 View Job
                             </a>
-                            {job.status !== 'REJECTED' && job.status !== 'NOTIFIED' && (
+                            {job.status !== 'REJECTED' && job.status !== 'NOTIFIED' && job.status !== 'ERROR' && (
                                 <>
                                     <button 
                                         className="button button-success"
@@ -126,6 +137,9 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
                             )}
                             {job.status === 'REJECTED' && (
                                 <button className="button button-danger" disabled style={{ opacity: 0.5 }}>Rejected</button>
+                            )}
+                            {job.status === 'ERROR' && (
+                                <button className="button button-danger" disabled style={{ opacity: 0.5 }}>Errored</button>
                             )}
                         </div>
                     </div>
