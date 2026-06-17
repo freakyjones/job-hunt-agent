@@ -22,16 +22,25 @@ export interface JobRecord {
 /**
  * Manages the connection to Google Sheets for tracking job state.
  */
+import { JWT } from 'google-auth-library';
+
 export class SheetsStateManager {
-    private doc: GoogleSpreadsheet;
+    private documentId: string;
+    private doc?: GoogleSpreadsheet;
 
     constructor(documentId: string) {
-        this.doc = new GoogleSpreadsheet(documentId);
+        this.documentId = documentId;
     }
 
     async init(credentials: any) {
-        // Authenticate with the Google Sheets API
-        await this.doc.useServiceAccountAuth(credentials);
+        // Authenticate with the Google Sheets API using v5 syntax
+        const serviceAccountAuth = new JWT({
+            email: credentials.client_email,
+            key: credentials.private_key,
+            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+        });
+
+        this.doc = new GoogleSpreadsheet(this.documentId, serviceAccountAuth);
         await this.doc.loadInfo(); 
     }
 
