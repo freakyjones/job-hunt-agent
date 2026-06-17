@@ -1,4 +1,4 @@
-import { sendGmailNotification } from './gmail_notify';
+import { sendEmailNotification } from './email_notify';
 
 /**
  * Handles the auto-application logic with built-in guardrails.
@@ -29,7 +29,7 @@ export class AutoApplier {
         console.log(`Guardrail passed. Submitting application autonomously...`);
         // TODO: Trigger specific Playwright logic to fill out Lever/Greenhouse forms
         
-        await sendGmailNotification({
+        await sendEmailNotification({
             subject: `✅ Successfully applied to ${company}`,
             body: `The agent has successfully submitted your application to ${company}.<br><a href="${jobUrl}">View Job</a>`
         });
@@ -38,7 +38,7 @@ export class AutoApplier {
     }
 
     private async requestHumanApproval(jobUrl: string, company: string) {
-        await sendGmailNotification({
+        await sendEmailNotification({
             subject: `⚠️ Approval Required: Apply to ${company}?`,
             body: `
             <h2>Action Required</h2>
