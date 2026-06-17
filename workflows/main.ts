@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import { createAgent } from '../agent/index';
-import { scrapeRssFeed } from '../tools/scrape_rss';
-import { scrapeLever } from '../tools/scrape_lever';
+import { scrapeNaukri } from '../tools/scrape_naukri';
+import { scrapeIndeed } from '../tools/scrape_indeed';
 import { SheetsStateManager, JobStatus, JobRecord } from '../tools/sheets_state';
 import { sendEmailNotification } from '../tools/email_notify';
 
@@ -26,37 +26,43 @@ async function main() {
     if (command === 'scrape') {
         console.log('Running Workflow A: Scraper...');
         
-        // 1. Fetch live jobs from WWR RSS feed (Design/Engineering usually)
-        const urls = await scrapeRssFeed('https://weworkremotely.com/remote-jobs.rss');
-        console.log(`Found ${urls.length} URLs in RSS feed.`);
+        // 1. Fetch live jobs from Naukri & Indeed
+        const allJobs: any[] = [];
+        const keyword = "React Developer";
+        const location = "Remote India";
+
+        console.log("Scraping Naukri...");
+        const naukriJobs = await scrapeNaukri(keyword, location);
+        allJobs.push(...naukriJobs);
+
+        console.log("Scraping Indeed...");
+        const indeedJobs = await scrapeIndeed(keyword, location);
+        allJobs.push(...indeedJobs);
         
-        for (const url of urls.slice(0, 5)) { // Limit to 5 for test runs
-            const id = crypto.createHash('md5').update(url).digest('hex');
+        console.log(`Found a total of ${allJobs.length} jobs.`);
+        
+        for (const details of allJobs) {
+            const id = crypto.createHash('md5').update(details.url).digest('hex');
             
             if (await sheets.isJobProcessed(id)) {
-                console.log(`Skipping already processed: ${url}`);
+                console.log(`Skipping already processed: ${details.url}`);
                 continue;
             }
 
             try {
                 const job: JobRecord = {
                     id,
-                    company: "WWR Startup",
-                    role: "Remote Developer",
-                    url,
+                    company: details.company,
+                    role: details.title,
+                    url: details.url,
                     status: JobStatus.PENDING
                 };
                 
-                // If it's a Lever link, we can deep-scrape the actual JD and Company
-                if (url.includes('jobs.lever.co')) {
-                    const details = await scrapeLever(url);
-                    job.company = details.company;
-                    job.role = details.title;
-                }
-                
+                // We could do deep scraping here, but snippet is enough for a basic match
+                // We'll write the dummy JD for now or use the snippet
                 await sheets.addPendingJob(job);
             } catch (e: any) {
-                console.error(`Failed to process ${url}:`, e.message);
+                console.error(`Failed to process ${details.url}:`, e.message);
             }
         }
 
