@@ -94,8 +94,19 @@ async function main() {
                 console.log(`Score: ${result.score}/100`);
                 
                 await sheets.updateJobStatus(id, JobStatus.EVALUATED, result.score, result.matchReason);
+
+                // Anti-Rate-Limit Delay for Gemini Free Tier (15 Requests Per Minute max)
+                console.log("Waiting 15 seconds to respect Gemini API rate limits...");
+                await new Promise(resolve => setTimeout(resolve, 15000));
+
             } catch (e: any) {
                 console.error(`Evaluation failed for ${url}:`, e.message);
+                
+                // If it failed due to 429 quota, we should back off significantly
+                if (e.message.includes('429')) {
+                    console.log("Hit rate limit. Waiting 60 seconds before continuing...");
+                    await new Promise(resolve => setTimeout(resolve, 60000));
+                }
             }
         }
         
