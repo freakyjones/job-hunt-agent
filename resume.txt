@@ -1,0 +1,54 @@
+
+
+Abhilash Pandey
+Frontend Developer | React Specialist | JavaScript Engineer
+ Bangalore, India |  abhilashpandey8170@gmail.com |  +91-8617030028
+ LinkedIn | GitHub
+PROFESSIONAL SUMMARY
+Frontend Engineer with 1.5+ years of experience building scalable, responsive web applications. Expertise
+in React ecosystem, component architecture, and performance optimization. Skilled in delivering  high-
+performance, accessible, and responsive UI/UX.   Currently   expanding   knowledge   in  Next.js and
+TypeScript to enhance full-stack capabilities.
+TECHNICAL SKILLS
+Frontend: React.js, JavaScript (ES6+), HTML5, CSS3, Redux, React Router, Vite
+Styling/UI: Tailwind CSS, SCSS, Responsive Design, Mobile-First, Framer Motion, Dark/Light Themes
+Backend/Database: Node.js, Express.js, MongoDB, Firebase, REST APIs, OpenAI API
+Tools/DevOps: Git, Webpack, NPM, Vite, Performance Optimization, Code Splitting, Bundle Analysis, Vercel
+Deployment
+Testing/Quality: Unit Testing, Code Reviews, Cross-Browser Compatibility, Web Performance, Accessibility,
+Core Web Vitals
+WORK EXPERIENCE
+Frontend Engineer – Miho | Ahmedabad, Gujarat | Jul 2022 – Feb 2023
+- Designed reusable React components and styled-components library, reducing dev time by 40%
+- Implemented scalable frontend architecture for complex UIs with optimal performance
+- Integrated subscription management, 2FA, and payment gateways to enhance security
+- Managed code quality and technical debt while improving maintainability and testing coverage 
+Frontend Developer – Gloqal | San Francisco (Remote) | Oct 2020 – Oct 2021
+- Translated design requirements into responsive, user-friendly web interfaces
+- Developed dynamic pages using HTML, CSS, JS; contributed to backend API integration
+- Designed user dashboards and registration flows to improve onboarding experience
+1
+
+FEATURED PROJECTS
+AI-Powered Weather Application | React.js, JavaScript, Tailwind CSS, Framer Motion, OpenWeather API,
+OpenAI API, Vite, Vercel
+ Live Demo | GitHub
+-  Performance & Accessibility: Lighthouse scores: Performance 100, Accessibility 100, Best Practices 100,
+SEO 80
+- Core Web Vitals: FCP 0.4s, LCP 0.4s, TBT 0ms, CLS 0, SI 0.5s
+- Integrated OpenWeather & OpenAI APIs for real-time weather + AI outfit suggestions
+- Built responsive UI with geolocation, dark/light themes, and Framer Motion animations
+- Optimized JS bundle (minified 31 KiB), removed 21 KiB unused CSS, 165 KiB unused JS
+Super Trivia – Superhero Platform | React.js, Redux, React Router, REST APIs
+- Developed interactive superhero info platform with robust API error handling
+- Optimized for desktop/mobile with code splitting, achieving 30% faster load times
+Developer Portfolio Website | React.js, Redux, Redux-Thunk, Framer Motion
+- Built comprehensive portfolio showcasing frontend skills and animations
+- Implemented advanced scroll-triggered animations and professional UI presentation
+EDUCATION
+B.Tech, Information Technology – Bengal College of Engineering and Technology, Durgapur, West Bengal
+| Jul 2021
+ADDITIONAL INFORMATION
+Languages: English (Professional), Hindi (Native)
+Interests: Technical Documentation, Cricket, Anime, Open Source Contributions
+2

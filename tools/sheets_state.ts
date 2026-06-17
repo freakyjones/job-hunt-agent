@@ -4,6 +4,7 @@ import { GoogleSpreadsheet, GoogleSpreadsheetWorksheet } from 'google-spreadshee
 export enum JobStatus {
     PENDING = 'PENDING',
     EVALUATED = 'EVALUATED',
+    NOTIFIED = 'NOTIFIED',
     APPLYING = 'APPLYING',
     APPLIED = 'APPLIED',
     FAILED = 'FAILED',

@@ -115,7 +115,7 @@ async function main() {
                            <a href="${row.get('URL')}">Click here to Apply manually</a>`
                 });
                 
-                await sheets.updateJobStatus(row.get('ID'), JobStatus.APPLIED);
+                await sheets.updateJobStatus(row.get('ID'), JobStatus.NOTIFIED);
             }
         }
     } else {
