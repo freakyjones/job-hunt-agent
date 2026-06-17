@@ -1,4 +1,5 @@
-import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { JWT } from 'google-auth-library';
+import { GoogleSpreadsheet, GoogleSpreadsheetWorksheet } from 'google-spreadsheet';
 
 export enum JobStatus {
     PENDING = 'PENDING',
@@ -22,18 +23,16 @@ export interface JobRecord {
 /**
  * Manages the connection to Google Sheets for tracking job state.
  */
-import { JWT } from 'google-auth-library';
-
 export class SheetsStateManager {
     private documentId: string;
     private doc?: GoogleSpreadsheet;
+    private sheet?: GoogleSpreadsheetWorksheet;
 
     constructor(documentId: string) {
         this.documentId = documentId;
     }
 
     async init(credentials: any) {
-        // Authenticate with the Google Sheets API using v5 syntax
         const serviceAccountAuth = new JWT({
             email: credentials.client_email,
             key: credentials.private_key,
@@ -42,29 +41,75 @@ export class SheetsStateManager {
 
         this.doc = new GoogleSpreadsheet(this.documentId, serviceAccountAuth);
         await this.doc.loadInfo(); 
+        this.sheet = this.doc.sheetsByIndex[0]; // Assume first tab
+        
+        // Auto-initialize headers if the sheet is empty
+        try {
+            await this.sheet.loadHeaderRow();
+        } catch (e: any) {
+            if (e.message.includes('No values in the header row')) {
+                console.log("Empty sheet detected. Initializing header row...");
+                await this.sheet.setHeaderRow(['ID', 'Company', 'Role', 'URL', 'Score', 'Reasoning', 'Status']);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    private ensureSheet() {
+        if (!this.sheet) throw new Error("Google Sheet not initialized. Call init() first.");
+        return this.sheet;
     }
 
     /**
      * Checks if a job URL has already been processed to ensure idempotency.
      */
     async isJobProcessed(jobUrlHash: string): Promise<boolean> {
-        // TODO: Query the sheets to verify hash
-        return false;
+        const sheet = this.ensureSheet();
+        const rows = await sheet.getRows();
+        return rows.some(row => row.get('ID') === jobUrlHash);
     }
 
     /**
      * Adds a newly scraped job to the Pending tab.
      */
     async addPendingJob(job: JobRecord): Promise<void> {
+        const sheet = this.ensureSheet();
         console.log(`Added pending job: ${job.company} - ${job.role}`);
-        // TODO: Append row to "1. Pending" sheet
+        await sheet.addRow({
+            ID: job.id,
+            Company: job.company,
+            Role: job.role,
+            URL: job.url,
+            Status: job.status
+        });
     }
 
     /**
      * Updates the job score and moves it to Evaluated/Applied.
      */
-    async updateJobStatus(jobId: string, status: JobStatus, score?: number): Promise<void> {
-        console.log(`Updated job ${jobId} to status ${status}`);
-        // TODO: Update specific row in Google Sheets
+    async updateJobStatus(jobId: string, status: JobStatus, score?: number, reasoning?: string): Promise<void> {
+        const sheet = this.ensureSheet();
+        const rows = await sheet.getRows();
+        const row = rows.find(r => r.get('ID') === jobId);
+        
+        if (row) {
+            row.set('Status', status);
+            if (score !== undefined) row.set('Score', score.toString());
+            if (reasoning !== undefined) row.set('Reasoning', reasoning);
+            await row.save();
+            console.log(`Updated job ${jobId} to status ${status}`);
+        } else {
+            console.log(`Job ID ${jobId} not found to update.`);
+        }
+    }
+
+    /**
+     * Retrieves all jobs with a specific status.
+     */
+    async getJobsByStatus(status: JobStatus): Promise<any[]> {
+        const sheet = this.ensureSheet();
+        const rows = await sheet.getRows();
+        return rows.filter(row => row.get('Status') === status);
     }
 }
