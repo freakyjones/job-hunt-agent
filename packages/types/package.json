@@ -1,0 +1,12 @@
+{
+  "name": "@job-hunt/types",
+  "version": "1.0.0",
+  "main": "index.js",
+  "types": "index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.0"
+  }
+}

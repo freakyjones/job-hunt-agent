@@ -5,6 +5,11 @@ on:
     # Run twice a day (e.g., 9 AM and 5 PM UTC)
     - cron: '0 9,17 * * *'
   workflow_dispatch: # Allows manual trigger from the GitHub UI
+    inputs:
+      command:
+        description: 'Workflow to run (all, scrape, evaluate, apply)'
+        required: false
+        default: 'all'
 
 jobs:
   run-agent:
@@ -31,6 +36,7 @@ jobs:
           echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > google-credentials.json
 
       - name: Run Sourcing Workflow (Workflow A)
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.command == 'all' || github.event.inputs.command == 'scrape' }}
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
@@ -38,7 +44,9 @@ jobs:
           GOOGLE_SHEETS_DOCUMENT_ID: ${{ secrets.GOOGLE_SHEETS_DOCUMENT_ID }}
         run: npm run start -- scrape
 
+
       - name: Run Evaluator Workflow (Workflow B)
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.command == 'all' || github.event.inputs.command == 'evaluate' }}
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
@@ -47,9 +55,18 @@ jobs:
         run: npm run start -- evaluate
 
       - name: Run Auto-Applier Workflow (Workflow C)
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.command == 'all' || github.event.inputs.command == 'apply' }}
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           GOOGLE_SHEETS_DOCUMENT_ID: ${{ secrets.GOOGLE_SHEETS_DOCUMENT_ID }}
         run: npm run start -- apply
+
+      - name: Upload Playwright Screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-error-screenshots
+          path: apps/agent/playwright-screenshots/
+          retention-days: 7

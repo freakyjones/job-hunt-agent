@@ -1,0 +1,110 @@
+.container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    align-items: center;
+    justify-content: center;
+    background-color: #050505; /* Deep dark background */
+    font-family: 'Inter', sans-serif;
+    padding: 1rem;
+}
+
+.card {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(20, 20, 20, 0.6);
+    padding: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.title {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #ffffff;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #a1a1aa;
+}
+
+.input {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 0.75rem 1rem;
+    color: #ffffff;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.input::placeholder {
+    color: #52525b;
+}
+
+.buttonGroup {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.primaryButton {
+    border-radius: 8px;
+    background-color: #3b82f6;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.primaryButton:hover {
+    background-color: #2563eb;
+}
+
+.secondaryButton {
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: transparent;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: #d4d4d8;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.secondaryButton:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+}

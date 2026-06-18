@@ -62,6 +62,12 @@ export async function scrapeNaukri(keyword: string = "react developer", location
         
     } catch (error) {
         console.error("Failed to scrape Naukri:", error);
+        try {
+            await page.screenshot({ path: `playwright-screenshots/naukri_error_${Date.now()}.png`, fullPage: true });
+        } catch (e) {
+            console.error("Failed to take screenshot:", e);
+        }
+        throw error; // Rethrow to let the main workflow know it failed
     } finally {
         await browser.close();
     }
