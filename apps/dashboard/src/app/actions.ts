@@ -1,87 +1,57 @@
 'use server';
 
-import { JWT } from 'google-auth-library';
-import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { revalidatePath } from 'next/cache';
-
-function getCredentials() {
-    const credsStr = process.env.GOOGLE_SERVICE_ACCOUNT_BASE64 
-        ? Buffer.from(process.env.GOOGLE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8')
-        : process.env.GOOGLE_CREDENTIALS_JSON;
-        
-    if (!credsStr) throw new Error("Missing GOOGLE_CREDENTIALS_JSON or GOOGLE_SERVICE_ACCOUNT_BASE64 in env.");
-    return JSON.parse(credsStr);
-}
+import { Job, JobStatusEnum } from '@job-hunt/types';
+import { createClient } from '@/utils/supabase/server';
 
 export async function getJobsAction() {
     try {
-        const credentials = getCredentials();
-        const docId = process.env.GOOGLE_SHEETS_DOCUMENT_ID;
-        if (!docId) throw new Error("Missing GOOGLE_SHEETS_DOCUMENT_ID");
+        const supabase = await createClient();
+        const { data, error } = await supabase
+            .from('jobs')
+            .select('*')
+            .order('score', { ascending: false, nullsFirst: false });
 
-        const serviceAccountAuth = new JWT({
-            email: credentials.client_email,
-            key: credentials.private_key,
-            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        });
-
-        const doc = new GoogleSpreadsheet(docId, serviceAccountAuth);
-        await doc.loadInfo();
-        const sheet = doc.sheetsByIndex[0];
-
-        const rows = await sheet.getRows();
-        const jobs = rows.map(row => ({
-            id: row.get('ID'),
-            company: row.get('Company'),
-            role: row.get('Role'),
-            url: row.get('URL'),
-            score: parseInt(row.get('Score') || '0', 10),
-            reasoning: row.get('Reasoning'),
-            status: row.get('Status'),
-        }));
-
-        return { success: true, data: jobs.sort((a, b) => b.score - a.score) };
-    } catch (e: any) {
-        console.error("Failed to get jobs:", e);
-        return { success: false, error: e.message };
-    }
-}
-
-export async function updateJobStatusAction(id: string, newStatus: string) {
-    try {
-        const credentials = getCredentials();
-        const docId = process.env.GOOGLE_SHEETS_DOCUMENT_ID;
-        if (!docId) throw new Error("Missing GOOGLE_SHEETS_DOCUMENT_ID");
-
-        const serviceAccountAuth = new JWT({
-            email: credentials.client_email,
-            key: credentials.private_key,
-            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        });
-
-        const doc = new GoogleSpreadsheet(docId, serviceAccountAuth);
-        await doc.loadInfo();
-        const sheet = doc.sheetsByIndex[0];
-
-        const rows = await sheet.getRows();
-        const row = rows.find(r => r.get('ID') === id);
-
-        if (!row) {
-            return { success: false, error: 'Job not found' };
+        if (error) {
+            throw new Error(error.message);
         }
 
-        row.set('Status', newStatus);
-        await row.save();
-
-        revalidatePath('/'); // Force the dashboard to refresh server-side data
-        return { success: true };
-    } catch (e: any) {
-        console.error(e);
-        return { success: false, error: e.message };
+        return { success: true, data: data as Job[] };
+    } catch (e: unknown) {
+        if (e instanceof Error) {
+            console.error("Failed to get jobs:", e.message);
+            return { success: false, error: e.message };
+        }
+        return { success: false, error: 'Unknown error' };
     }
 }
 
-export async function triggerGitHubAction() {
+export async function updateJobStatusAction(id: string, newStatusStr: string) {
+    try {
+        const newStatus = JobStatusEnum.parse(newStatusStr);
+        const supabase = await createClient();
+        
+        const { error } = await supabase
+            .from('jobs')
+            .update({ status: newStatus })
+            .eq('id', id);
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        revalidatePath('/');
+        return { success: true };
+    } catch (e: unknown) {
+        if (e instanceof Error) {
+            console.error(e.message);
+            return { success: false, error: e.message };
+        }
+        return { success: false, error: 'Unknown error' };
+    }
+}
+
+export async function triggerGitHubAction(command: string = 'all') {
     try {
         const githubToken = process.env.GITHUB_PAT;
         const owner = process.env.GITHUB_OWNER || 'freakyjones';
@@ -98,7 +68,7 @@ export async function triggerGitHubAction() {
                 'Accept': 'application/vnd.github.v3+json',
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ ref: 'main' }),
+            body: JSON.stringify({ ref: 'main', inputs: { command } }),
         });
 
         if (!res.ok) {
@@ -107,8 +77,11 @@ export async function triggerGitHubAction() {
         }
 
         return { success: true };
-    } catch (e: any) {
-        console.error(e);
-        return { success: false, error: e.message };
+    } catch (e: unknown) {
+        if (e instanceof Error) {
+            console.error(e.message);
+            return { success: false, error: e.message };
+        }
+        return { success: false, error: 'Unknown error' };
     }
 }

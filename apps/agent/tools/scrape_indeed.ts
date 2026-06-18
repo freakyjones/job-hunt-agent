@@ -64,6 +64,12 @@ export async function scrapeIndeed(keyword: string = "react developer", location
         
     } catch (error) {
         console.error("Failed to scrape Indeed (Cloudflare block likely):", error);
+        try {
+            await page.screenshot({ path: `playwright-screenshots/indeed_error_${Date.now()}.png`, fullPage: true });
+        } catch (e) {
+            console.error("Failed to take screenshot:", e);
+        }
+        throw error;
     } finally {
         await browser.close();
     }

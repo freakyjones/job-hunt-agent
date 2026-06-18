@@ -1,11 +1,10 @@
 {
   "compilerOptions": {
-    "target": "es2022",
-    "module": "commonjs",
-    "rootDir": "./",
-    "outDir": "./dist",
-    "esModuleInterop": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "declaration": true,
     "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "noUnusedLocals": true,
@@ -13,5 +12,5 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["agent/**/*", "tools/**/*", "workflows/**/*"]
+  "include": ["index.ts"]
 }

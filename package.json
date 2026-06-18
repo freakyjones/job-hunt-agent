@@ -3,7 +3,19 @@
   "version": "1.0.0",
   "description": "Zero-Cost Job Hunt Agent Monorepo",
   "private": true,
+  "packageManager": "npm@11.13.0",
   "workspaces": [
-    "apps/*"
-  ]
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "start": "npm run start -w apps/agent --",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "build": "turbo run build"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.4"
+  }
 }

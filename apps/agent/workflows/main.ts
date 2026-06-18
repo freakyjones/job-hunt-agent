@@ -1,10 +1,19 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import * as crypto from 'crypto';
+import * as dotenv from 'dotenv';
 import { createAgent } from '../agent/index';
 import { scrapeNaukri } from '../tools/scrape_naukri';
 import { scrapeIndeed } from '../tools/scrape_indeed';
-import { SheetsStateManager, JobStatus, JobRecord } from '../tools/sheets_state';
+import { DBStateManager } from '../tools/db_state';
+import { Job, JobStatus } from '@job-hunt/types';
 import { sendEmailNotification } from '../tools/email_notify';
+
+// Load .env for local testing
+const envPath = path.join(__dirname, '../../../.env');
+if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+}
 
 /**
  * Main entry point for the Job Hunt Agent GitHub Actions workflows.
@@ -15,13 +24,9 @@ async function main() {
 
     console.log(`Starting Zero-Cost Job Hunt Agent - Mode: ${command}`);
 
-    // Initialize Sheets State Manager
-    const credentials = JSON.parse(fs.readFileSync('./google-credentials.json', 'utf8'));
-    const docId = process.env.GOOGLE_SHEETS_DOCUMENT_ID;
-    if (!docId) throw new Error("Missing GOOGLE_SHEETS_DOCUMENT_ID");
-    
-    const sheets = new SheetsStateManager(docId);
-    await sheets.init(credentials);
+    // Initialize Database State Manager (Supabase)
+    const db = new DBStateManager();
+    await db.init();
 
     if (command === 'scrape') {
         console.log('Running Workflow A: Scraper...');
@@ -42,15 +47,17 @@ async function main() {
         console.log(`Found a total of ${allJobs.length} jobs.`);
         
         for (const details of allJobs) {
-            const id = crypto.createHash('md5').update(details.url).digest('hex');
+            // Use company + title for deduplication instead of URL which often has dynamic tracking params
+            const stableString = `${details.company.trim().toLowerCase()}||${details.title.trim().toLowerCase()}`;
+            const id = crypto.createHash('md5').update(stableString).digest('hex');
             
-            if (await sheets.isJobProcessed(id)) {
+            if (await db.isJobProcessed(id)) {
                 console.log(`Skipping already processed: ${details.url}`);
                 continue;
             }
 
             try {
-                const job: JobRecord = {
+                const job: Job = {
                     id,
                     company: details.company,
                     role: details.title,
@@ -58,33 +65,31 @@ async function main() {
                     status: JobStatus.PENDING
                 };
                 
-                // We could do deep scraping here, but snippet is enough for a basic match
-                // We'll write the dummy JD for now or use the snippet
-                await sheets.addPendingJob(job);
-            } catch (e: any) {
-                console.error(`Failed to process ${details.url}:`, e.message);
+                await db.addPendingJob(job);
+            } catch (e: unknown) {
+                if (e instanceof Error) {
+                    console.error(`Failed to process ${details.url}:`, e.message);
+                }
             }
         }
 
     } else if (command === 'evaluate') {
         console.log('Running Workflow B: Evaluator...');
         
-        const pendingJobs = await sheets.getJobsByStatus(JobStatus.PENDING);
+        const pendingJobs = await db.getJobsByStatus(JobStatus.PENDING);
         if (pendingJobs.length === 0) {
             console.log("No pending jobs to evaluate.");
             return;
         }
 
         const agent = createAgent();
-        const resumeText = fs.readFileSync('./resume.txt', 'utf8');
+        const rootResumePath = path.join(__dirname, '../../../resume.txt');
+        const localResumePath = './resume.txt';
+        const resumePath = fs.existsSync(rootResumePath) ? rootResumePath : localResumePath;
+        const masterResume = fs.readFileSync(resumePath, 'utf8');
 
-        for (const row of pendingJobs) {
-            const url = row.get('URL');
-            const id = row.get('ID');
-            const role = row.get('Role');
-            const company = row.get('Company');
-            
-            console.log(`Evaluating ${company} - ${role}...`);
+        for (const job of pendingJobs) {
+            console.log(`Evaluating ${job.company} - ${job.role}...`);
             let success = false;
             let attempts = 0;
             const maxAttempts = 3;
@@ -93,64 +98,66 @@ async function main() {
                 try {
                     attempts++;
                     // In a production app, the Scraper would save the full Description to a DB/Sheet.
-                    const dummyJob = `Job at ${company} for ${role}. We need a remote developer with strong frontend skills.`;
+                    const dummyJob = `Job at ${job.company} for ${job.role}. We need a remote developer with strong frontend skills.`;
                     
-                    const result = await agent.evaluateJob(dummyJob, resumeText);
+                    const result = await agent.evaluateJob(dummyJob, masterResume);
                     console.log(`Score: ${result.score}/100`);
                     
-                    await sheets.updateJobStatus(id, JobStatus.EVALUATED, result.score, result.matchReason);
+                    await db.updateJobStatus(job.id, JobStatus.EVALUATED, result.score, result.matchReason);
                     success = true;
 
                     // Anti-Rate-Limit Delay for Gemini Free Tier (15 Requests Per Minute max)
                     console.log("Waiting 15 seconds to respect Gemini API rate limits...");
                     await new Promise(resolve => setTimeout(resolve, 15000));
 
-                } catch (e: any) {
-                    console.error(`Evaluation failed for ${url} (Attempt ${attempts}):`, e.message);
-                    
-                    if (e.message.includes('429')) {
-                        const backoff = 30000 * Math.pow(2, attempts - 1); // 30s, 60s, 120s
-                        console.log(`Hit rate limit. Exponential backoff: Waiting ${backoff/1000} seconds...`);
-                        await new Promise(resolve => setTimeout(resolve, backoff));
-                    } else if (e.message.includes('503')) {
-                        console.log(`Service unavailable. Waiting 30 seconds...`);
-                        await new Promise(resolve => setTimeout(resolve, 30000));
-                    } else {
-                        // For parsing errors or fatal errors, don't retry.
-                        break; 
+                } catch (e: unknown) {
+                    if (e instanceof Error) {
+                        console.error(`Evaluation failed for ${job.url} (Attempt ${attempts}):`, e.message);
+                        
+                        if (e.message.includes('429')) {
+                            const backoff = 30000 * Math.pow(2, attempts - 1); // 30s, 60s, 120s
+                            console.log(`Hit rate limit. Exponential backoff: Waiting ${backoff/1000} seconds...`);
+                            await new Promise(resolve => setTimeout(resolve, backoff));
+                        } else if (e.message.includes('503')) {
+                            console.log(`Service unavailable. Waiting 30 seconds...`);
+                            await new Promise(resolve => setTimeout(resolve, 30000));
+                        } else {
+                            // For parsing errors or fatal errors, don't retry.
+                            break; 
+                        }
                     }
                 }
             }
 
             if (!success) {
-                console.log(`Marking job ${id} as ERROR after ${attempts} attempts.`);
-                await sheets.updateJobStatus(id, JobStatus.ERROR);
+                console.log(`Marking job ${job.id} as ERROR after ${attempts} attempts.`);
+                await db.updateJobStatus(job.id, JobStatus.ERROR);
             }
         }
         
     } else if (command === 'apply') {
         console.log('Running Workflow C: Auto-Applier...');
         
-        const evalJobs = await sheets.getJobsByStatus(JobStatus.EVALUATED);
-        for (const row of evalJobs) {
-            const score = parseInt(row.get('Score'), 10);
+        const evalJobs = await db.getJobsByStatus(JobStatus.EVALUATED);
+        for (const job of evalJobs) {
+            const score = job.score;
             
             // Threshold for triggering an application or notification
-            if (!isNaN(score) && score >= 80) {
-                console.log(`Found high-match job (${score}/100): ${row.get('Company')}`);
+            if (score !== undefined && score >= 80) {
+                console.log(`Found high-match job (${score}/100): ${job.company}`);
                 
                 await sendEmailNotification({
-                    subject: `[Job Hunt Agent] High Match: ${row.get('Company')} (${score}/100)`,
+                    subject: `[Job Hunt Agent] High Match: ${job.company} (${score}/100)`,
                     body: `<h2>Perfect Job Found!</h2>
-                           <p><strong>Company:</strong> ${row.get('Company')}</p>
-                           <p><strong>Role:</strong> ${row.get('Role')}</p>
+                           <p><strong>Company:</strong> ${job.company}</p>
+                           <p><strong>Role:</strong> ${job.role}</p>
                            <p><strong>Score:</strong> ${score}/100</p>
-                           <p><strong>Agent Reasoning:</strong> ${row.get('Reasoning')}</p>
+                           <p><strong>Agent Reasoning:</strong> ${job.reasoning}</p>
                            <br/>
-                           <a href="${row.get('URL')}">Click here to Apply manually</a>`
+                           <a href="${job.url}">Click here to Apply manually</a>`
                 });
                 
-                await sheets.updateJobStatus(row.get('ID'), JobStatus.NOTIFIED);
+                await db.updateJobStatus(job.id, JobStatus.NOTIFIED);
             }
         }
     } else {
@@ -159,5 +166,16 @@ async function main() {
 }
 
 if (require.main === module) {
-    main().catch(console.error);
+    main().catch(async (e) => {
+        console.error("Fatal workflow error:", e);
+        try {
+            await sendEmailNotification({
+                subject: `[Job Hunt Agent] Fatal Crash`,
+                body: `<p>The GitHub Action workflow crashed!</p><pre>${e instanceof Error ? e.stack : e}</pre>`
+            });
+        } catch (emailErr) {
+            console.error("Failed to send crash email:", emailErr);
+        }
+        process.exit(1);
+    });
 }

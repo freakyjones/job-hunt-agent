@@ -1,11 +1,6 @@
 import { GoogleGenAI, Type, Schema } from '@google/genai';
 import { SYSTEM_PROMPT } from './system_prompt';
-
-export interface EvaluationResult {
-    score: number;
-    matchReason: string;
-    missingSkills: string[];
-}
+import { EvaluationResult, EvaluationResultSchema } from '@job-hunt/types';
 
 /**
  * Initializes and returns the Job Hunt Agent orchestrated by the Antigravity SDK.
@@ -86,18 +81,22 @@ export class JobHuntAgent {
                 rawText = rawText.replace(/^```\n/, '').replace(/\n```$/, '');
             }
 
-            const result: EvaluationResult = JSON.parse(rawText);
+            const parsedObj = JSON.parse(rawText);
+            const result = EvaluationResultSchema.parse(parsedObj);
             return result;
         } catch (error) {
-            console.error("JSON Parsing failed. Raw response:", response.text);
-            throw new Error('Gemini returned malformed JSON.');
+            console.error("JSON Parsing/Validation failed. Raw response:", response.text);
+            if (error instanceof Error) {
+                console.error(error.message);
+            }
+            throw new Error('Gemini returned malformed JSON or failed validation.');
         }
     }
 
     /**
      * Executes the Auto-Applier workflow using Playwright tools.
      */
-    async autoApply(jobUrl: string, candidateProfile: any): Promise<boolean> {
+    async autoApply(jobUrl: string, _candidateProfile: any): Promise<boolean> {
         console.log(`Starting auto-apply for ${jobUrl}`);
         // TODO: Call playwright auto-applier tools here
         return true;
