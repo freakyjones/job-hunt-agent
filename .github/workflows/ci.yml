@@ -1,0 +1,30 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Typecheck
+        run: npm run typecheck
+
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Build Dashboard
+        run: npm run build --workspace=dashboard
