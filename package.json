@@ -1,29 +1,9 @@
 {
   "name": "job-hunt-agent",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "ts-node workflows/main.ts"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "devDependencies": {
-    "@types/node": "^25.9.3",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
-  },
-  "dependencies": {
-    "@google/genai": "^2.8.0",
-    "google-auth-library": "^10.7.0",
-    "google-spreadsheet": "^5.3.0",
-    "pdf-parse": "^1.1.1",
-    "playwright": "^1.61.0",
-    "playwright-extra": "^4.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "resend": "^6.13.0",
-    "zod": "^4.4.3"
-  }
+  "description": "Zero-Cost Job Hunt Agent Monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
 }
