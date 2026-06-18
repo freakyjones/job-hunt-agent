@@ -14,7 +14,7 @@ export class JobHuntAgent {
         // Automatically picks up GEMINI_API_KEY from environment variables
         this.ai = new GoogleGenAI({});
         this.modelName = 'gemini-2.5-flash';
-        this.fallbackModelName = 'gemma-4-31b';
+        this.fallbackModelName = 'gemma-4-31b-it';
     }
 
     /**
