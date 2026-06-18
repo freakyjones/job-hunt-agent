@@ -20,8 +20,11 @@ export async function login(_prevState: FormState, formData: FormData): Promise<
     if (error) {
       return { error: error.message, success: false }
     }
-  } catch (err: any) {
-    return { error: err.message || 'An unexpected error occurred', success: false }
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return { error: err.message, success: false }
+    }
+    return { error: 'An unexpected error occurred', success: false }
   }
 
   revalidatePath('/', 'layout')
@@ -44,7 +47,10 @@ export async function signup(_prevState: FormState, formData: FormData): Promise
       return { error: error.message, success: false }
     }
   } catch (err: unknown) {
-    return { error: err instanceof Error ? err.message : 'An unexpected error occurred', success: false }
+    if (err instanceof Error) {
+      return { error: err.message, success: false }
+    }
+    return { error: 'An unexpected error occurred', success: false }
   }
 
   revalidatePath('/', 'layout')
