@@ -19,7 +19,7 @@ export async function getJobsAction() {
         return { success: true, data: data as Job[] };
     } catch (e: unknown) {
         if (e instanceof Error) {
-            console.error("Failed to get jobs:", e.message);
+            console.error("[Action: getJobsAction] Error:", e.message);
             return { success: false, error: e.message };
         }
         return { success: false, error: 'Unknown error' };
@@ -44,7 +44,7 @@ export async function updateJobStatusAction(id: string, newStatusStr: string) {
         return { success: true };
     } catch (e: unknown) {
         if (e instanceof Error) {
-            console.error(e.message);
+            console.error("[Action: updateJobStatusAction] Error:", e.message);
             return { success: false, error: e.message };
         }
         return { success: false, error: 'Unknown error' };
@@ -79,7 +79,7 @@ export async function triggerGitHubAction(command: string = 'all') {
         return { success: true };
     } catch (e: unknown) {
         if (e instanceof Error) {
-            console.error(e.message);
+            console.error("[Action: triggerGitHubAction] Error:", e.message);
             return { success: false, error: e.message };
         }
         return { success: false, error: 'Unknown error' };

@@ -2,18 +2,58 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as dotenv from 'dotenv';
+import { createClient } from '@supabase/supabase-js';
 import { createAgent } from '../agent/index';
 import { scrapeNaukri } from '../tools/scrape_naukri';
 import { scrapeIndeed } from '../tools/scrape_indeed';
 import { DBStateManager } from '../tools/db_state';
 import { Job, JobStatus } from '@job-hunt/types';
 import { sendEmailNotification } from '../tools/email_notify';
+import { logger } from '../utils/logger';
 
 // Load .env for local testing
 const envPath = path.join(__dirname, '../../../.env');
 if (fs.existsSync(envPath)) {
     dotenv.config({ path: envPath });
 }
+
+// Global Crash Handlers
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseAdmin = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+
+async function logFatalErrorToSupabase(error: Error, type: string) {
+    try {
+        logger.error(`[${type}] Intercepted fatal crash. Attempting to notify Supabase...`, error.stack);
+        
+        if (supabaseAdmin) {
+            await Promise.race([
+                supabaseAdmin.from('jobs').insert({
+                    id: crypto.randomBytes(16).toString('hex'),
+                    company: 'SYSTEM CRASH',
+                    role: type,
+                    status: JobStatus.ERROR,
+                    reasoning: `Fatal Crash (${type}): ${error.message}\n\nStack: ${error.stack}`
+                }),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase timeout')), 5000))
+            ]);
+            logger.info('Successfully logged fatal error to Supabase.');
+        }
+    } catch (supabaseErr: any) {
+        logger.error('Failed to log fatal error to Supabase (Network down?). Proceeding to crash.', supabaseErr.message);
+    } finally {
+        process.exit(1);
+    }
+}
+
+process.on('uncaughtException', (err) => logFatalErrorToSupabase(err, 'UncaughtException'));
+process.on('unhandledRejection', (reason) => {
+    const err = reason instanceof Error ? reason : new Error(String(reason));
+    logFatalErrorToSupabase(err, 'UnhandledRejection');
+});
+process.on('SIGTERM', () => {
+    logFatalErrorToSupabase(new Error('Process received SIGTERM (GitHub Runner Timeout)'), 'SIGTERM');
+});
 
 /**
  * Main entry point for the Job Hunt Agent GitHub Actions workflows.
@@ -22,7 +62,7 @@ async function main() {
     const args = process.argv.slice(2);
     const command = args[0] || 'help';
 
-    console.log(`Starting Zero-Cost Job Hunt Agent - Mode: ${command}`);
+    logger.info(`Starting Zero-Cost Job Hunt Agent - Mode: ${command}`);
 
     // Initialize Database State Manager (Supabase)
     const db = new DBStateManager();

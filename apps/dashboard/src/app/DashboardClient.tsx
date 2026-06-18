@@ -46,8 +46,8 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
                     },
                 });
             }
-        } catch (e: any) {
-            toast.error(e?.message ? `Error: ${e.message}` : "An unexpected error occurred", { 
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? `Error: ${e.message}` : "An unexpected error occurred", { 
                 id: loadingToast,
                 style: {
                     background: '#ef4444',
@@ -66,21 +66,35 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
     };
 
     const handleUpdateStatus = async (id: string, newStatus: Job['status']) => {
+        // Capture original status
+        const targetJob = jobs.find(j => j.id === id);
+        const originalStatus = targetJob ? targetJob.status : JobStatus.PENDING;
+
         // Optimistic UI update
-        setJobs(jobs.map(j => j.id === id ? { ...j, status: newStatus } : j));
+        setJobs(prev => prev.map(j => j.id === id ? { ...j, status: newStatus } : j));
         
         try {
             const res = await updateJobStatusAction(id, newStatus);
             if (!res.success) {
-                toast.error("Failed to sync status with Google Sheets");
-                // Revert optimistic update
-                setJobs(jobs);
+                toast.error(res.error ? `Failed to sync: ${res.error}` : "Failed to sync status with Supabase", {
+                    style: { background: '#ef4444', color: '#fff', fontWeight: 'bold', padding: '16px', borderRadius: '8px' },
+                    iconTheme: { primary: '#fff', secondary: '#ef4444' },
+                });
+                // Revert securely
+                setJobs(prev => prev.map(j => j.id === id ? { ...j, status: originalStatus } : j));
             } else {
-                toast.success(`Job marked as ${newStatus}`);
+                toast.success(`Job marked as ${newStatus}`, {
+                    style: { background: '#10b981', color: '#fff', fontWeight: 'bold', padding: '16px', borderRadius: '8px' },
+                    iconTheme: { primary: '#fff', secondary: '#10b981' },
+                });
             }
-        } catch {
-            toast.error("Failed to update status");
-            setJobs(jobs);
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? `Error: ${e.message}` : "Failed to update status", {
+                style: { background: '#ef4444', color: '#fff', fontWeight: 'bold', padding: '16px', borderRadius: '8px' },
+                iconTheme: { primary: '#fff', secondary: '#ef4444' },
+            });
+            // Revert securely
+            setJobs(prev => prev.map(j => j.id === id ? { ...j, status: originalStatus } : j));
         }
     };
 
@@ -110,8 +124,12 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
                     <button 
                         className="button"
                         onClick={async () => {
-                            const { logout } = await import('./login/actions');
-                            await logout();
+                            try {
+                                const { logout } = await import('./login/actions');
+                                await logout();
+                            } catch (e: unknown) {
+                                toast.error(e instanceof Error ? e.message : "Failed to sign out", { style: { background: '#ef4444', color: '#fff', borderRadius: '8px' }});
+                            }
                         }}
                     >
                         Sign Out

@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Job, JobStatus } from '@job-hunt/types';
+import { logger } from '../utils/logger';
 
 /**
  * Manages the connection to Supabase Postgres for tracking job state.
@@ -50,7 +51,7 @@ export class DBStateManager {
      * Adds a newly scraped job to the Database.
      */
     async addPendingJob(job: Job): Promise<void> {
-        console.log(`Added pending job: ${job.company} - ${job.role}`);
+        logger.info(`Added pending job: ${job.company} - ${job.role}`);
         
         const { error } = await this.supabase.from('jobs').insert([{
             id: job.id,
