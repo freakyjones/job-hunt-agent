@@ -8,11 +8,13 @@ import { EvaluationResult, EvaluationResultSchema } from '@job-hunt/types';
 export class JobHuntAgent {
     private ai: GoogleGenAI;
     private modelName: string;
+    private fallbackModelName: string;
 
     constructor() {
         // Automatically picks up GEMINI_API_KEY from environment variables
         this.ai = new GoogleGenAI({});
         this.modelName = 'gemini-2.5-flash';
+        this.fallbackModelName = 'gemma-4-31b';
     }
 
     /**
@@ -57,19 +59,32 @@ export class JobHuntAgent {
             required: ["score", "matchReason", "missingSkills"],
         };
 
-        const response = await this.ai.models.generateContent({
-            model: this.modelName,
-            contents: prompt,
-            config: {
-                systemInstruction: SYSTEM_PROMPT,
-                responseMimeType: "application/json",
-                responseSchema: responseSchema,
-                // Implementing a small delay/rate limit mitigation could be done here or in the caller
-            }
-        });
+        let response;
+        try {
+            response = await this.ai.models.generateContent({
+                model: this.modelName,
+                contents: prompt,
+                config: {
+                    systemInstruction: SYSTEM_PROMPT,
+                    responseMimeType: "application/json",
+                    responseSchema: responseSchema,
+                }
+            });
+        } catch (error: unknown) {
+            console.warn(`Primary model ${this.modelName} failed. Falling back to ${this.fallbackModelName}...`);
+            response = await this.ai.models.generateContent({
+                model: this.fallbackModelName,
+                contents: prompt,
+                config: {
+                    systemInstruction: SYSTEM_PROMPT,
+                    responseMimeType: "application/json",
+                    responseSchema: responseSchema,
+                }
+            });
+        }
 
-        if (!response.text) {
-            throw new Error('Gemini failed to return text.');
+        if (!response?.text) {
+            throw new Error('LLM failed to return text.');
         }
 
         try {

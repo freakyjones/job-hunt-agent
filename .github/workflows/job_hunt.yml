@@ -31,17 +31,14 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install chromium --with-deps
 
-      - name: Generate Google Credentials JSON
-        run: |
-          echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > google-credentials.json
-
       - name: Run Sourcing Workflow (Workflow A)
         if: ${{ github.event_name == 'schedule' || github.event.inputs.command == 'all' || github.event.inputs.command == 'scrape' }}
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          GOOGLE_SHEETS_DOCUMENT_ID: ${{ secrets.GOOGLE_SHEETS_DOCUMENT_ID }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run start -- scrape
 
 
@@ -51,7 +48,8 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          GOOGLE_SHEETS_DOCUMENT_ID: ${{ secrets.GOOGLE_SHEETS_DOCUMENT_ID }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run start -- evaluate
 
       - name: Run Auto-Applier Workflow (Workflow C)
@@ -60,7 +58,8 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          GOOGLE_SHEETS_DOCUMENT_ID: ${{ secrets.GOOGLE_SHEETS_DOCUMENT_ID }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run start -- apply
 
       - name: Upload Playwright Screenshots
