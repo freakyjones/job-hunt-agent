@@ -16,14 +16,51 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
         try {
             const res = await triggerGitHubAction(command);
             if (res.success) {
-                toast.success(`Agent ${command} triggered! Jobs will update shortly.`, { id: loadingToast });
+                toast.success(`Agent ${command} triggered! Jobs will update shortly.`, { 
+                    id: loadingToast,
+                    style: {
+                        background: '#10b981',
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        padding: '16px',
+                        borderRadius: '8px'
+                    },
+                    iconTheme: {
+                        primary: '#fff',
+                        secondary: '#10b981',
+                    },
+                });
             } else {
-                toast.error("Failed to trigger: " + res.error, { id: loadingToast });
+                toast.error(res.error ? `Failed to trigger: ${res.error}` : "Failed to trigger the agent", { 
+                    id: loadingToast,
+                    style: {
+                        background: '#ef4444',
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        padding: '16px',
+                        borderRadius: '8px'
+                    },
+                    iconTheme: {
+                        primary: '#fff',
+                        secondary: '#ef4444',
+                    },
+                });
             }
-        } catch (e: unknown) {
-            if (e instanceof Error) {
-                toast.error("Error: " + e.message, { id: loadingToast });
-            }
+        } catch (e: any) {
+            toast.error(e?.message ? `Error: ${e.message}` : "An unexpected error occurred", { 
+                id: loadingToast,
+                style: {
+                    background: '#ef4444',
+                    color: '#fff',
+                    fontWeight: 'bold',
+                    padding: '16px',
+                    borderRadius: '8px'
+                },
+                iconTheme: {
+                    primary: '#fff',
+                    secondary: '#ef4444',
+                },
+            });
         }
         setIsTriggering(false);
     };
