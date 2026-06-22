@@ -1,5 +1,6 @@
 import DashboardClient from './DashboardClient';
 import { getJobsAction } from './actions';
+import { RealtimeJobListener } from '../components/RealtimeJobListener';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,5 +11,10 @@ export default async function Home() {
         throw new Error(response.error || "Failed to fetch jobs from Supabase");
     }
     
-    return <DashboardClient initialJobs={response.data || []} />;
+    return (
+        <>
+            <RealtimeJobListener />
+            <DashboardClient initialJobs={response.data || []} />
+        </>
+    );
 }

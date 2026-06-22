@@ -2,13 +2,14 @@ import { z } from 'zod';
 export declare enum JobStatus {
     PENDING = "PENDING",
     EVALUATED = "EVALUATED",
-    NOTIFIED = "NOTIFIED",
+    ACCEPTED = "ACCEPTED",
     APPLYING = "APPLYING",
     APPLIED = "APPLIED",
     FAILED = "FAILED",
     SKIPPED = "SKIPPED",
     ERROR = "ERROR",
-    REJECTED = "REJECTED"
+    REJECTED = "REJECTED",
+    SAVED = "SAVED"
 }
 export declare const JobStatusEnum: z.ZodNativeEnum<typeof JobStatus>;
 export declare const JobSchema: z.ZodObject<{
@@ -16,6 +17,7 @@ export declare const JobSchema: z.ZodObject<{
     company: z.ZodString;
     role: z.ZodString;
     url: z.ZodUnion<[z.ZodString, z.ZodOptional<z.ZodString>]>;
+    description: z.ZodOptional<z.ZodString>;
     score: z.ZodOptional<z.ZodNumber>;
     reasoning: z.ZodOptional<z.ZodString>;
     status: z.ZodNativeEnum<typeof JobStatus>;
@@ -25,6 +27,7 @@ export declare const JobSchema: z.ZodObject<{
     role: string;
     status: JobStatus;
     url?: string | undefined;
+    description?: string | undefined;
     score?: number | undefined;
     reasoning?: string | undefined;
 }, {
@@ -33,6 +36,7 @@ export declare const JobSchema: z.ZodObject<{
     role: string;
     status: JobStatus;
     url?: string | undefined;
+    description?: string | undefined;
     score?: number | undefined;
     reasoning?: string | undefined;
 }>;
