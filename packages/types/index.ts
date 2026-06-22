@@ -3,13 +3,14 @@ import { z } from 'zod';
 export enum JobStatus {
     PENDING = 'PENDING',
     EVALUATED = 'EVALUATED',
-    NOTIFIED = 'NOTIFIED',
+    ACCEPTED = 'ACCEPTED',
     APPLYING = 'APPLYING',
     APPLIED = 'APPLIED',
     FAILED = 'FAILED',
     SKIPPED = 'SKIPPED',
     ERROR = 'ERROR',
-    REJECTED = 'REJECTED'
+    REJECTED = 'REJECTED',
+    SAVED = 'SAVED'
 }
 
 export const JobStatusEnum = z.nativeEnum(JobStatus);

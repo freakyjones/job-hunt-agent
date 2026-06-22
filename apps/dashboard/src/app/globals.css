@@ -48,6 +48,10 @@ body {
   font-weight: 600;
   transition: all 0.2s ease;
   font-size: 14px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
 }
 
 .button:active {

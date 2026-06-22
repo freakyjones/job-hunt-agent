@@ -1,51 +1,43 @@
-import { sendEmailNotification } from './email_notify';
+import { getBrowser } from './playwright_core';
+import { applyToGreenhouse } from './apply_greenhouse';
+import { applyToLever } from './apply_lever';
 
-/**
- * Handles the auto-application logic with built-in guardrails.
- */
 export class AutoApplier {
-    private MAX_HUMAN_APPROVALS = 10;
-    
-    // In a real database, this would be fetched from Google Sheets or state
-    private currentApprovalsCount = 0;
+    async execute(jobUrl: string, company: string): Promise<boolean> {
+        console.log(`Starting Auto-Applier for ${company} at ${jobUrl}`);
 
-    /**
-     * Attempts to auto-apply to a job or requests human approval if under threshold.
-     */
-    async execute(jobUrl: string, company: string, atsType: string): Promise<boolean> {
-        console.log(`Starting Auto-Applier for ${company} (${atsType}) at ${jobUrl}`);
+        let atsType = 'unknown';
+        if (jobUrl.includes('greenhouse.io')) atsType = 'greenhouse';
+        else if (jobUrl.includes('lever.co')) atsType = 'lever';
 
-        if (atsType !== 'lever' && atsType !== 'greenhouse') {
-            console.log(`Skipping auto-apply for ${atsType}. Only Lever and Greenhouse are supported.`);
+        if (atsType === 'unknown') {
+            console.log(`Skipping auto-apply for ${company}. Only Lever and Greenhouse are supported.`);
             return false;
         }
 
-        if (this.currentApprovalsCount < this.MAX_HUMAN_APPROVALS) {
-            console.log(`Guardrail active: Requesting human approval (${this.currentApprovalsCount}/${this.MAX_HUMAN_APPROVALS})`);
-            await this.requestHumanApproval(jobUrl, company);
-            return false; // Wait for human, do not apply yet
+        const browser = await getBrowser(true); // Headless mode
+        const context = await browser.newContext();
+        const page = await context.newPage();
+
+        try {
+            let success = false;
+            if (atsType === 'greenhouse') {
+                success = await applyToGreenhouse(page, jobUrl);
+            } else if (atsType === 'lever') {
+                success = await applyToLever(page, jobUrl);
+            }
+
+            if (success) {
+                console.log(`Successfully applied to ${company}`);
+            } else {
+                console.log(`Failed to verify successful application for ${company}`);
+            }
+            return success;
+        } catch (error: any) {
+            console.error(`Error during auto-application for ${company}:`, error.message);
+            return false;
+        } finally {
+            await browser.close();
         }
-
-        console.log(`Guardrail passed. Submitting application autonomously...`);
-        // TODO: Trigger specific Playwright logic to fill out Lever/Greenhouse forms
-        
-        await sendEmailNotification({
-            subject: `✅ Successfully applied to ${company}`,
-            body: `The agent has successfully submitted your application to ${company}.<br><a href="${jobUrl}">View Job</a>`
-        });
-
-        return true;
-    }
-
-    private async requestHumanApproval(jobUrl: string, company: string) {
-        await sendEmailNotification({
-            subject: `⚠️ Approval Required: Apply to ${company}?`,
-            body: `
-            <h2>Action Required</h2>
-            <p>The agent found an excellent match for <strong>${company}</strong>.</p>
-            <p>Because we are still in the first 10 applications (Human-in-the-loop phase), the agent requires your manual approval to proceed with Playwright form submission.</p>
-            <a href="${jobUrl}">Review the Job Posting</a>
-            `
-        });
     }
 }

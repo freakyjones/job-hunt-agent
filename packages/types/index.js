@@ -6,13 +6,14 @@ var JobStatus;
 (function (JobStatus) {
     JobStatus["PENDING"] = "PENDING";
     JobStatus["EVALUATED"] = "EVALUATED";
-    JobStatus["NOTIFIED"] = "NOTIFIED";
+    JobStatus["ACCEPTED"] = "ACCEPTED";
     JobStatus["APPLYING"] = "APPLYING";
     JobStatus["APPLIED"] = "APPLIED";
     JobStatus["FAILED"] = "FAILED";
     JobStatus["SKIPPED"] = "SKIPPED";
     JobStatus["ERROR"] = "ERROR";
     JobStatus["REJECTED"] = "REJECTED";
+    JobStatus["SAVED"] = "SAVED";
 })(JobStatus || (exports.JobStatus = JobStatus = {}));
 exports.JobStatusEnum = zod_1.z.nativeEnum(JobStatus);
 exports.JobSchema = zod_1.z.object({
@@ -20,6 +21,7 @@ exports.JobSchema = zod_1.z.object({
     company: zod_1.z.string(),
     role: zod_1.z.string(),
     url: zod_1.z.string().url().or(zod_1.z.string().optional()),
+    description: zod_1.z.string().optional(),
     score: zod_1.z.number().min(0).max(100).optional(),
     reasoning: zod_1.z.string().optional(),
     status: exports.JobStatusEnum
