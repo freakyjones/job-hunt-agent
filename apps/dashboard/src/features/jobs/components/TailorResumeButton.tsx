@@ -45,9 +45,13 @@ export function TailorResumeButton({ job, masterResumeContent }: TailorResumeBut
                 throw new Error("Unexpected response type from Edge Function");
             }
             
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Failed to generate resume:', err);
-            setError(err.message || 'Failed to generate PDF');
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError('Failed to generate PDF');
+            }
         } finally {
             setIsLoading(false);
         }
