@@ -1,13 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useOptimistic, useTransition, useMemo } from 'react';
 import styles from './page.module.css';
 import toast from 'react-hot-toast';
 import { triggerGitHubAction, updateJobStatusAction } from './actions';
+import { logout } from './login/actions';
 import { Job, JobStatus } from '@job-hunt/types';
 
 export default function DashboardClient({ initialJobs }: { initialJobs: Job[] }) {
-    const [jobs, setJobs] = useState<Job[]>(initialJobs);
+    const [optimisticJobs, addOptimisticJob] = useOptimistic(
+        initialJobs,
+        (state: Job[], newJob: { id: string, status: JobStatus }) => {
+            return state.map(j => j.id === newJob.id ? { ...j, status: newJob.status } : j);
+        }
+    );
+    const [, startTransition] = useTransition();
     const [isTriggering, setIsTriggering] = useState(false);
 
     const handleTrigger = async (command: string) => {
@@ -66,12 +73,9 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
     };
 
     const handleUpdateStatus = async (id: string, newStatus: Job['status']) => {
-        // Capture original status
-        const targetJob = jobs.find(j => j.id === id);
-        const originalStatus = targetJob ? targetJob.status : JobStatus.PENDING;
-
-        // Optimistic UI update
-        setJobs(prev => prev.map(j => j.id === id ? { ...j, status: newStatus } : j));
+        startTransition(() => {
+            addOptimisticJob({ id, status: newStatus });
+        });
         
         try {
             const res = await updateJobStatusAction(id, newStatus);
@@ -80,8 +84,6 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
                     style: { background: '#ef4444', color: '#fff', fontWeight: 'bold', padding: '16px', borderRadius: '8px' },
                     iconTheme: { primary: '#fff', secondary: '#ef4444' },
                 });
-                // Revert securely
-                setJobs(prev => prev.map(j => j.id === id ? { ...j, status: originalStatus } : j));
             } else {
                 toast.success(`Job marked as ${newStatus}`, {
                     style: { background: '#10b981', color: '#fff', fontWeight: 'bold', padding: '16px', borderRadius: '8px' },
@@ -93,14 +95,12 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
                 style: { background: '#ef4444', color: '#fff', fontWeight: 'bold', padding: '16px', borderRadius: '8px' },
                 iconTheme: { primary: '#fff', secondary: '#ef4444' },
             });
-            // Revert securely
-            setJobs(prev => prev.map(j => j.id === id ? { ...j, status: originalStatus } : j));
         }
     };
 
-    const pendingJobs = jobs.filter(j => j.status === JobStatus.PENDING || j.status === JobStatus.EVALUATED);
-    const notifiedJobs = jobs.filter(j => j.status === JobStatus.NOTIFIED);
-    const errorJobs = jobs.filter(j => j.status === JobStatus.ERROR);
+    const pendingJobs = useMemo(() => optimisticJobs.filter(j => j.status === JobStatus.PENDING || j.status === JobStatus.EVALUATED), [optimisticJobs]);
+    const notifiedJobs = useMemo(() => optimisticJobs.filter(j => j.status === JobStatus.NOTIFIED), [optimisticJobs]);
+    const errorJobs = useMemo(() => optimisticJobs.filter(j => j.status === JobStatus.ERROR), [optimisticJobs]);
 
     return (
         <div className={styles.container}>
@@ -123,13 +123,14 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
                     </button>
                     <button 
                         className="button"
-                        onClick={async () => {
-                            try {
-                                const { logout } = await import('./login/actions');
-                                await logout();
-                            } catch (e: unknown) {
-                                toast.error(e instanceof Error ? e.message : "Failed to sign out", { style: { background: '#ef4444', color: '#fff', borderRadius: '8px' }});
-                            }
+                        onClick={() => {
+                            startTransition(async () => {
+                                try {
+                                    await logout();
+                                } catch (e: unknown) {
+                                    toast.error(e instanceof Error ? e.message : "Failed to sign out", { style: { background: '#ef4444', color: '#fff', borderRadius: '8px' }});
+                                }
+                            });
                         }}
                     >
                         Sign Out
@@ -139,7 +140,7 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
 
             <div className={styles.stats}>
                 <div className={`glass-panel ${styles.statCard} animate-fade-in`}>
-                    <div className={styles.statValue}>{jobs.length}</div>
+                    <div className={styles.statValue}>{optimisticJobs.length}</div>
                     <div className={styles.statLabel}>Total Jobs Scraped</div>
                 </div>
                 <div className={`glass-panel ${styles.statCard} animate-fade-in`} style={{ animationDelay: '0.1s' }}>
@@ -157,7 +158,7 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
             </div>
 
             <div className={styles.grid}>
-                {jobs.map((job, index) => (
+                {optimisticJobs.map((job, index) => (
                     <div 
                         key={job.id} 
                         className={`glass-panel ${styles.jobCard} animate-fade-in`} 

@@ -10,7 +10,8 @@ export async function getJobsAction() {
         const { data, error } = await supabase
             .from('jobs')
             .select('*')
-            .order('score', { ascending: false, nullsFirst: false });
+            .order('score', { ascending: false, nullsFirst: false })
+            .limit(100);
 
         if (error) {
             throw new Error(error.message);
