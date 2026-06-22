@@ -19,6 +19,7 @@ export const JobSchema = z.object({
     company: z.string(),
     role: z.string(),
     url: z.string().url().or(z.string().optional()),
+    description: z.string().optional(),
     score: z.number().min(0).max(100).optional(),
     reasoning: z.string().optional(),
     status: JobStatusEnum

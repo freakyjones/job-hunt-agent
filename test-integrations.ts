@@ -1,30 +1,31 @@
-import { JWT } from 'google-auth-library';
-import { GoogleSpreadsheet } from 'google-spreadsheet';
-import * as fs from 'fs';
-import { sendEmailNotification } from './tools/email_notify';
+import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
+import { sendEmailNotification } from './apps/agent/tools/email_notify.ts';
+
+dotenv.config();
 
 async function testAll() {
-    console.log("1. Testing Google Sheets Connection...");
+    console.log("1. Testing Supabase Connection...");
     try {
-        const credentials = JSON.parse(fs.readFileSync('./google-credentials.json', 'utf8'));
-        const docId = process.env.GOOGLE_SHEETS_DOCUMENT_ID;
-        if (!docId) throw new Error("GOOGLE_SHEETS_DOCUMENT_ID is missing from .env");
-        
-        try {
-            const serviceAccountAuth = new JWT({
-                email: credentials.client_email,
-                key: credentials.private_key,
-                scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-            });
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-            const doc = new GoogleSpreadsheet(docId, serviceAccountAuth);
-            await doc.loadInfo();
-            console.log(`✅ Google Sheets Success! Connected to Document: "${doc.title}"`);
-        } catch (e: any) {
-            console.error("❌ Google Sheets Error:", e.message);
+        if (!supabaseUrl || !supabaseKey) {
+            throw new Error("Missing Supabase credentials in .env");
         }
+
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        // Simple query to test connection
+        const { error } = await supabase.from('jobs').select('id').limit(1);
+        
+        if (error) {
+            throw new Error(error.message);
+        }
+        
+        console.log(`✅ Supabase Success! Connected successfully.`);
     } catch (e: any) {
-        console.error("❌ Failed to read Google Credentials:", e.message);
+        console.error("❌ Supabase Error:", e.message);
     }
 
     console.log("\n2. Testing Resend Email Connection...");

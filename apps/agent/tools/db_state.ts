@@ -58,6 +58,7 @@ export class DBStateManager {
             company: job.company,
             role: job.role,
             url: job.url || '',
+            description: job.description || null,
             status: job.status
         }]);
 

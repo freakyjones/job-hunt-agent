@@ -46,13 +46,19 @@ export async function scrapeIndeed(keyword: string = "react developer", location
                 const jobUrl = urlPath.startsWith('http') ? urlPath : `https://in.indeed.com${urlPath}`;
                 
                 const company = await card.locator('.companyName, [data-testid="company-name"]').innerText().catch(() => 'Unknown Company');
-                const snippet = await card.locator('.job-snippet').innerText().catch(() => '');
+                
+                // Click the card to open the side panel
+                await card.click();
+                await page.waitForTimeout(1500 + Math.random() * 1000);
+                
+                // Extract full description from the side panel
+                const fullDescription = await page.locator('#jobDescriptionText').innerText().catch(() => '');
                 
                 if (title && jobUrl) {
                     jobs.push({
                         title: title.trim(),
                         company: company.trim(),
-                        description: snippet.trim(),
+                        description: fullDescription.trim(),
                         url: jobUrl,
                         atsType: 'unknown'
                     });

@@ -14,7 +14,7 @@ export class JobHuntAgent {
         // Automatically picks up GEMINI_API_KEY from environment variables
         this.ai = new GoogleGenAI({});
         this.modelName = 'gemini-2.5-flash';
-        this.fallbackModelName = 'gemma-4-31b';
+        this.fallbackModelName = 'gemma-4-31b-it';
     }
 
     /**
@@ -72,6 +72,9 @@ export class JobHuntAgent {
             });
         } catch (error: unknown) {
             console.warn(`Primary model ${this.modelName} failed. Falling back to ${this.fallbackModelName}...`);
+            if (error instanceof Error) {
+                console.warn(`Reason: ${error.message}`);
+            }
             response = await this.ai.models.generateContent({
                 model: this.fallbackModelName,
                 contents: prompt,
@@ -88,12 +91,11 @@ export class JobHuntAgent {
         }
 
         try {
-            // Cleanup: Sometimes Gemini wraps JSON in markdown blocks despite the application/json mime type
+            // Robust JSON extraction
             let rawText = response.text.trim();
-            if (rawText.startsWith('```json')) {
-                rawText = rawText.replace(/^```json\n/, '').replace(/\n```$/, '');
-            } else if (rawText.startsWith('```')) {
-                rawText = rawText.replace(/^```\n/, '').replace(/\n```$/, '');
+            const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                rawText = jsonMatch[0];
             }
 
             const parsedObj = JSON.parse(rawText);

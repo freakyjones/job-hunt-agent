@@ -86,6 +86,7 @@ async function main() {
         
         console.log(`Found a total of ${allJobs.length} jobs.`);
         
+        let addedCount = 0;
         for (const details of allJobs) {
             // Use company + title for deduplication instead of URL which often has dynamic tracking params
             const stableString = `${details.company.trim().toLowerCase()}||${details.title.trim().toLowerCase()}`;
@@ -106,12 +107,20 @@ async function main() {
                 };
                 
                 await db.addPendingJob(job);
+                addedCount++;
             } catch (e: unknown) {
                 if (e instanceof Error) {
                     console.error(`Failed to process ${details.url}:`, e.message);
                 }
             }
         }
+
+        await sendEmailNotification({
+            subject: `[Job Hunt Agent] Scraper Summary`,
+            body: `<h2>Scraping Complete</h2>
+                   <p><strong>Total Jobs Found:</strong> ${allJobs.length}</p>
+                   <p><strong>New Jobs Added:</strong> ${addedCount}</p>`
+        });
 
     } else if (command === 'evaluate') {
         console.log('Running Workflow B: Evaluator...');
@@ -128,6 +137,9 @@ async function main() {
         const resumePath = fs.existsSync(rootResumePath) ? rootResumePath : localResumePath;
         const masterResume = fs.readFileSync(resumePath, 'utf8');
 
+        let evaluatedCount = 0;
+        let errorCount = 0;
+
         for (const job of pendingJobs) {
             console.log(`Evaluating ${job.company} - ${job.role}...`);
             let success = false;
@@ -137,14 +149,15 @@ async function main() {
             while (!success && attempts < maxAttempts) {
                 try {
                     attempts++;
-                    // In a production app, the Scraper would save the full Description to a DB/Sheet.
-                    const dummyJob = `Job at ${job.company} for ${job.role}. We need a remote developer with strong frontend skills.`;
                     
-                    const result = await agent.evaluateJob(dummyJob, masterResume);
+                    const jobDescription = job.description || `Job at ${job.company} for ${job.role}.`;
+                    
+                    const result = await agent.evaluateJob(jobDescription, masterResume);
                     console.log(`Score: ${result.score}/100`);
                     
                     await db.updateJobStatus(job.id, JobStatus.EVALUATED, result.score, result.matchReason);
                     success = true;
+                    evaluatedCount++;
 
                     // Anti-Rate-Limit Delay for Gemini Free Tier (15 Requests Per Minute max)
                     console.log("Waiting 15 seconds to respect Gemini API rate limits...");
@@ -172,8 +185,16 @@ async function main() {
             if (!success) {
                 console.log(`Marking job ${job.id} as ERROR after ${attempts} attempts.`);
                 await db.updateJobStatus(job.id, JobStatus.ERROR);
+                errorCount++;
             }
         }
+        
+        await sendEmailNotification({
+            subject: `[Job Hunt Agent] Evaluator Summary`,
+            body: `<h2>Evaluation Complete</h2>
+                   <p><strong>Total Jobs Evaluated:</strong> ${evaluatedCount}</p>
+                   <p><strong>Evaluation Errors:</strong> ${errorCount}</p>`
+        });
         
     } else if (command === 'apply') {
         console.log('Running Workflow C: Auto-Applier...');
