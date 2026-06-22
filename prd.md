@@ -36,9 +36,10 @@ Build a fully autonomous, zero-cost AI agent that sources job postings, evaluate
 
 ### 3.2 Infrastructure & Cost
 - **Budget:** $0.00. 
-- **Compute:** Ephemeral GitHub Actions.
+- **Compute:** Ephemeral GitHub Actions with Turborepo caching.
 - **Database:** Supabase Postgres (Free Tier).
 - **Notifications:** Resend API.
+- **Monorepo:** pnpm workspaces, centralized ESLint/TSConfig, and Husky lint-staged pre-commit hooks.
 
 ## 4. Key Performance Indicators (KPIs)
 - **Scrape Rate:** Number of jobs discovered daily.

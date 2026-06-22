@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Zero-Cost Job Hunt Agent Monorepo",
   "private": true,
-  "packageManager": "npm@11.13.0",
+  "packageManager": "pnpm@9.0.0",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -20,5 +20,14 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
     "turbo": "^2.0.4"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css}": [
+      "prettier --write"
+    ]
   }
 }

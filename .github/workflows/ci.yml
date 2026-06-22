@@ -5,26 +5,29 @@ on:
     branches: [ main ]
 
 jobs:
-  lint-and-typecheck:
+  build:
+    name: Lint, Typecheck, and Build
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
 
       - name: Install Dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
-      - name: Run Typecheck
-        run: npm run typecheck
-
-      - name: Run Linter
-        run: npm run lint
-
-      - name: Build Dashboard
-        run: npm run build --workspace=dashboard
+      - name: Run Checks and Build
+        run: pnpm turbo run lint typecheck build --filter="...[origin/main]"

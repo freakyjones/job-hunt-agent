@@ -3,7 +3,7 @@ import { applyToGreenhouse } from './apply_greenhouse';
 import { applyToLever } from './apply_lever';
 
 export class AutoApplier {
-    async execute(jobUrl: string, company: string): Promise<boolean> {
+    async execute(jobUrl: string, company: string, customResumePath?: string): Promise<boolean> {
         console.log(`Starting Auto-Applier for ${company} at ${jobUrl}`);
 
         let atsType = 'unknown';
@@ -22,9 +22,9 @@ export class AutoApplier {
         try {
             let success = false;
             if (atsType === 'greenhouse') {
-                success = await applyToGreenhouse(page, jobUrl);
+                success = await applyToGreenhouse(page, jobUrl, customResumePath);
             } else if (atsType === 'lever') {
-                success = await applyToLever(page, jobUrl);
+                success = await applyToLever(page, jobUrl, customResumePath);
             }
 
             if (success) {

@@ -14,6 +14,7 @@ import { Job, JobStatus } from '@job-hunt/types';
 import { sendEmailNotification } from '../tools/email_notify';
 import { logger } from '../utils/logger';
 import { AutoApplier } from '../tools/auto_apply';
+import { TailoringAgent } from '../agent/tailor';
 
 // Load .env for local testing
 const envPath = path.join(__dirname, '../../../.env');
@@ -246,14 +247,29 @@ async function runApply(db: DBStateManager) {
     }
 
     const autoApplier = new AutoApplier();
+    const tailor = new TailoringAgent();
     
     console.log(`Found ${acceptedJobs.length} jobs in the ACCEPTED queue.`);
     
+    const rootResumePath = path.join(__dirname, '../../../resume.txt');
+    const localResumePath = './resume.txt';
+    const masterResumePath = fs.existsSync(rootResumePath) ? rootResumePath : localResumePath;
+    const masterResume = fs.existsSync(masterResumePath) ? fs.readFileSync(masterResumePath, 'utf8') : '';
+
     for (const job of acceptedJobs) {
         console.log(`Auto-Applying to accepted job: ${job.company}`);
         await db.updateJobStatus(job.id, JobStatus.APPLYING);
         try {
-            const success = await autoApplier.execute(job.url || '', job.company);
+            let customResumePath = undefined;
+            if (masterResume && job.description) {
+                try {
+                    customResumePath = await tailor.tailorResume(masterResume, job.description, job.company);
+                } catch (e: any) {
+                    console.error(`Tailoring failed for ${job.company}, falling back to master resume:`, e.message);
+                }
+            }
+
+            const success = await autoApplier.execute(job.url || '', job.company, customResumePath);
             if (success) {
                 await db.updateJobStatus(job.id, JobStatus.APPLIED);
                 await sendEmailNotification({
