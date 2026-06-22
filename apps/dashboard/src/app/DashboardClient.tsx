@@ -6,8 +6,10 @@ import toast from 'react-hot-toast';
 import { triggerGitHubAction, updateJobStatusAction } from './actions';
 import { logout } from './login/actions';
 import { Job, JobStatus } from '@job-hunt/types';
+import { DashboardTabs, TabName } from '../features/jobs/components/DashboardTabs';
+import { JobCard } from '../features/jobs/components/JobCard';
 
-export default function DashboardClient({ initialJobs }: { initialJobs: Job[] }) {
+export default function DashboardClient({ initialJobs, masterResume }: { initialJobs: Job[], masterResume: string }) {
     const [optimisticJobs, addOptimisticJob] = useOptimistic(
         initialJobs,
         (state: Job[], newJob: { id: string, status: JobStatus }) => {
@@ -17,7 +19,6 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
     const [, startTransition] = useTransition();
     const [isTriggering, setIsTriggering] = useState(false);
     
-    type TabName = 'inbox' | 'queue' | 'applied' | 'rejected' | 'saved';
     const [activeTab, setActiveTab] = useState<TabName>('inbox');
 
     const handleTrigger = async (command: string) => {
@@ -138,38 +139,17 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
             </header>
 
             {/* TAB NAVIGATION */}
-            <div className={styles.tabsContainer}>
-                <button 
-                    className={`${styles.tab} ${activeTab === 'inbox' ? styles.activeTab : ''}`}
-                    onClick={() => setActiveTab('inbox')}
-                >
-                    📥 Inbox <span className={styles.badge}>{inboxJobs.length}</span>
-                </button>
-                <button 
-                    className={`${styles.tab} ${activeTab === 'queue' ? styles.activeTab : ''}`}
-                    onClick={() => setActiveTab('queue')}
-                >
-                    🤖 Bot Queue <span className={styles.badge}>{queueJobs.length}</span>
-                </button>
-                <button 
-                    className={`${styles.tab} ${activeTab === 'saved' ? styles.activeTab : ''}`}
-                    onClick={() => setActiveTab('saved')}
-                >
-                    🔖 Saved (Manual) <span className={styles.badge}>{savedJobs.length}</span>
-                </button>
-                <button 
-                    className={`${styles.tab} ${activeTab === 'applied' ? styles.activeTab : ''}`}
-                    onClick={() => setActiveTab('applied')}
-                >
-                    ✅ Applied <span className={styles.badge}>{appliedJobs.length}</span>
-                </button>
-                <button 
-                    className={`${styles.tab} ${activeTab === 'rejected' ? styles.activeTab : ''}`}
-                    onClick={() => setActiveTab('rejected')}
-                >
-                    🗑️ Rejected <span className={styles.badge}>{rejectedJobs.length}</span>
-                </button>
-            </div>
+            <DashboardTabs 
+                activeTab={activeTab} 
+                setActiveTab={setActiveTab} 
+                counts={{
+                    inbox: inboxJobs.length,
+                    queue: queueJobs.length,
+                    saved: savedJobs.length,
+                    applied: appliedJobs.length,
+                    rejected: rejectedJobs.length
+                }} 
+            />
 
             {/* EMPTY STATE */}
             {displayJobs.length === 0 && (
@@ -189,49 +169,15 @@ export default function DashboardClient({ initialJobs }: { initialJobs: Job[] })
             )}
 
             <div className={styles.grid}>
-                {displayJobs.map((job, index) => {
-                    const isAutoApplicable = job.url?.includes('lever.co') || job.url?.includes('greenhouse.io');
-                    return (
-                    <div key={job.id} className={`glass-panel ${styles.jobCard} animate-fade-in`} data-status={job.status} style={{ animationDelay: `${(index % 10) * 0.05}s` }}>
-                        <div className={styles.jobHeader}>
-                            <div>
-                                <h3 className={styles.jobTitle}>{job.role}</h3>
-                                <p className={styles.jobCompany}>{job.company}</p>
-                            </div>
-                            {job.status === JobStatus.ERROR ? (
-                                <div className={styles.scoreBadge} style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171' }}>ERR</div>
-                            ) : job.status === JobStatus.PENDING ? (
-                                <div className={styles.pendingBadge}>PENDING</div>
-                            ) : (
-                                <div className={styles.scoreBadge} data-high={(job.score || 0) >= 80}>{job.score || 0}/100</div>
-                            )}
-                        </div>
-
-                        <div className={styles.reasoning}>
-                            {job.reasoning || (job.status === JobStatus.ERROR ? "Failed to evaluate or apply." : "Evaluation pending...")}
-                        </div>
-
-                        <div className={styles.actions}>
-                            <a href={job.url || '#'} target="_blank" rel="noreferrer" className="button button-primary">View Job</a>
-                            {/* Actions only show if in inbox/eval state */}
-                            {(job.status === JobStatus.PENDING || job.status === JobStatus.EVALUATED || job.status === JobStatus.ERROR) && (
-                                <>
-                                    {isAutoApplicable ? (
-                                        <button className="button button-success" onClick={() => handleUpdateStatus(job.id, JobStatus.ACCEPTED, job.status as JobStatus)}>Queue for Bot</button>
-                                    ) : (
-                                        <button className="button button-secondary" onClick={() => handleUpdateStatus(job.id, JobStatus.SAVED, job.status as JobStatus)}>Save (Manual)</button>
-                                    )}
-                                    <button className="button button-danger" onClick={() => handleUpdateStatus(job.id, JobStatus.REJECTED, job.status as JobStatus)}>Reject</button>
-                                </>
-                            )}
-                            {job.status === JobStatus.ACCEPTED && <button className="button button-success" disabled style={{ opacity: 0.5 }}>Queued</button>}
-                            {job.status === JobStatus.SAVED && <button className="button button-secondary" disabled style={{ opacity: 0.5 }}>Saved</button>}
-                            {job.status === JobStatus.APPLYING && <button className="button button-success" disabled style={{ opacity: 0.5 }}>Applying</button>}
-                            {job.status === JobStatus.APPLIED && <button className="button button-success" disabled style={{ opacity: 0.5 }}>Applied</button>}
-                            {job.status === JobStatus.REJECTED && <button className="button button-danger" disabled style={{ opacity: 0.5 }}>Rejected</button>}
-                        </div>
-                    </div>
-                )})}
+                {displayJobs.map((job, index) => (
+                    <JobCard 
+                        key={job.id} 
+                        job={job} 
+                        index={index} 
+                        onUpdateStatus={handleUpdateStatus} 
+                        masterResume={masterResume} 
+                    />
+                ))}
             </div>
         </div>
     );

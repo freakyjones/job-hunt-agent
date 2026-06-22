@@ -1,0 +1,8 @@
+{
+  "name": "@job-hunt/eslint-config",
+  "version": "1.0.0",
+  "main": "index.mjs",
+  "dependencies": {
+    "eslint": "^9.0.0"
+  }
+}

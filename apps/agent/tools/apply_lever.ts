@@ -2,7 +2,7 @@ import { Page } from 'playwright';
 import * as path from 'path';
 import profile from '../profile.json';
 
-export async function applyToLever(page: Page, url: string): Promise<boolean> {
+export async function applyToLever(page: Page, url: string, customResumePath?: string): Promise<boolean> {
     console.log(`Navigating to Lever: ${url}`);
     
     if (!url.includes('/apply')) {
@@ -17,7 +17,7 @@ export async function applyToLever(page: Page, url: string): Promise<boolean> {
     await page.fill('input[name="phone"]', profile.phone).catch(() => {});
     
     // Upload Resume
-    const resumePath = path.resolve(__dirname, '../', profile.resumePath);
+    const resumePath = customResumePath || path.resolve(__dirname, '../', profile.resumePath);
     const fileInputs = await page.$$('input[type="file"]');
     if (fileInputs.length > 0) {
         await fileInputs[0].setInputFiles(resumePath).catch((e) => console.log('Could not upload resume', e.message));
