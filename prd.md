@@ -12,20 +12,20 @@ Build a fully autonomous, zero-cost AI agent that sources job postings, evaluate
 - **Objective:** Continuously find new job postings.
 - **Sources:** RSS Feeds (e.g., WeWorkRemotely) and targeted company job boards.
 - **Execution:** Runs via GitHub Actions cron schedule every 4 hours.
-- **Data Storage:** Raw data is appended to the `1. Pending` tab of a Google Sheet.
+- **Data Storage:** Raw data is inserted into the Supabase Postgres database with a `PENDING` status.
 
 ### 2.2 Workflow B: The Evaluator (Brain)
 - **Objective:** Evaluate if a pending job matches the candidate's profile.
 - **Filtering:** Performs a regex pass to filter out mismatched seniorities.
 - **LLM Engine:** Gemini 2.5 Flash via Google AI Studio Free Tier (Max 15 RPM).
 - **Process:** Performs a 1:1 evaluation (Master Resume vs Job Description).
-- **Data Storage:** Evaluated jobs are moved to the `2. Evaluated` tab in Google Sheets with a match score (0-100).
+- **Data Storage:** Evaluated jobs are updated in the Supabase Postgres database to an `EVALUATED` status with a match score (0-100).
 
 ### 2.3 Workflow C: The Auto-Applier (Execution)
 - **Objective:** Submit job applications autonomously.
 - **Trigger:** Any job scoring > 85 in the `Evaluated` tab.
 - **Automation Engine:** Playwright with stealth plugins to evade bot detection.
-- **Logging & Notification:** Moves job to `3. Applied` tab and sends an email via Gmail SMTP upon success or failure.
+- **Logging & Notification:** Updates job status to `APPLIED` in Supabase Postgres and sends an email notification via Resend API upon success or failure.
 
 ## 3. Strict Project Constraints & Guardrails
 
@@ -37,8 +37,8 @@ Build a fully autonomous, zero-cost AI agent that sources job postings, evaluate
 ### 3.2 Infrastructure & Cost
 - **Budget:** $0.00. 
 - **Compute:** Ephemeral GitHub Actions.
-- **Database:** Google Sheets API.
-- **Notifications:** Gmail SMTP.
+- **Database:** Supabase Postgres (Free Tier).
+- **Notifications:** Resend API.
 
 ## 4. Key Performance Indicators (KPIs)
 - **Scrape Rate:** Number of jobs discovered daily.
@@ -47,4 +47,4 @@ Build a fully autonomous, zero-cost AI agent that sources job postings, evaluate
 
 ## 5. Security & Privacy
 - **Resume Protection:** Ensure the master resume data is not inadvertently exposed or published.
-- **Secret Management:** GitHub Actions Secrets must be used for Google Sheets API keys, Gemini API keys, and Gmail App Passwords.
+- **Secret Management:** GitHub Actions Secrets must be used for Supabase credentials, Gemini API keys, and Resend API keys.

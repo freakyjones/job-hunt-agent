@@ -44,14 +44,28 @@ export async function scrapeNaukri(keyword: string = "react developer", location
                 const url = await titleLoc.getAttribute('href') || '';
                 
                 const company = await card.locator('.comp-name').innerText().catch(() => 'Unknown Company');
-                const description = await card.locator('.job-desc').innerText().catch(() => '');
+                const jobUrl = url.startsWith('http') ? url : `https://www.naukri.com${url}`;
                 
-                if (title && url) {
+                // Open job URL in new page to get full description
+                let fullDescription = "";
+                if (jobUrl) {
+                    const jobPage = await context.newPage();
+                    try {
+                        await jobPage.goto(jobUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+                        fullDescription = await jobPage.locator('.job-desc, .dang-inner-html').innerText().catch(() => '');
+                    } catch (e) {
+                        console.error("Failed to load full JD for " + jobUrl);
+                    } finally {
+                        await jobPage.close();
+                    }
+                }
+                
+                if (title && jobUrl) {
                     jobs.push({
                         title: title.trim(),
                         company: company.trim(),
-                        description: description.trim(),
-                        url: url.startsWith('http') ? url : `https://www.naukri.com${url}`,
+                        description: fullDescription.trim(),
+                        url: jobUrl,
                         atsType: 'unknown'
                     });
                 }

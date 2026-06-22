@@ -149,10 +149,10 @@ async function main() {
             while (!success && attempts < maxAttempts) {
                 try {
                     attempts++;
-                    // In a production app, the Scraper would save the full Description to a DB/Sheet.
-                    const dummyJob = `Job at ${job.company} for ${job.role}. We need a remote developer with strong frontend skills.`;
                     
-                    const result = await agent.evaluateJob(dummyJob, masterResume);
+                    const jobDescription = job.description || `Job at ${job.company} for ${job.role}.`;
+                    
+                    const result = await agent.evaluateJob(jobDescription, masterResume);
                     console.log(`Score: ${result.score}/100`);
                     
                     await db.updateJobStatus(job.id, JobStatus.EVALUATED, result.score, result.matchReason);
