@@ -28,47 +28,42 @@ export class DBStateManager {
         }
     }
 
-    private cachedIds: Set<string> | null = null;
-
-    private async loadIdsFromCache() {
-        if (!this.cachedIds) {
-            const { data, error } = await this.supabase.from('jobs').select('id');
-            if (error) throw new Error(error.message);
-            this.cachedIds = new Set(data.map(row => row.id));
-        }
-        return this.cachedIds;
-    }
-
     /**
-     * Checks if a job URL has already been processed to ensure idempotency.
+     * Given a batch of job IDs, returns a Set of IDs that are already processed.
      */
-    async isJobProcessed(jobUrlHash: string): Promise<boolean> {
-        const ids = await this.loadIdsFromCache();
-        return ids.has(jobUrlHash);
-    }
-
-    /**
-     * Adds a newly scraped job to the Database.
-     */
-    async addPendingJob(job: Job): Promise<void> {
-        logger.info(`Added pending job: ${job.company} - ${job.role}`);
+    async getProcessedJobs(jobIds: string[]): Promise<Set<string>> {
+        if (jobIds.length === 0) return new Set();
         
-        const { error } = await this.supabase.from('jobs').insert([{
+        const { data, error } = await this.supabase
+            .from('jobs')
+            .select('id')
+            .in('id', jobIds);
+            
+        if (error) throw new Error(error.message);
+        return new Set(data.map(row => row.id));
+    }
+
+    /**
+     * Adds newly scraped jobs to the Database in a single batch upsert.
+     */
+    async addPendingJobs(jobs: Job[]): Promise<void> {
+        if (jobs.length === 0) return;
+        
+        logger.info(`Adding ${jobs.length} pending jobs...`);
+        
+        const payload = jobs.map(job => ({
             id: job.id,
             company: job.company,
             role: job.role,
             url: job.url || '',
             description: job.description || null,
             status: job.status
-        }]);
+        }));
+
+        const { error } = await this.supabase.from('jobs').upsert(payload);
 
         if (error) {
-            throw new Error("Failed to insert job: " + error.message);
-        }
-        
-        // Update cache
-        if (this.cachedIds) {
-            this.cachedIds.add(job.id);
+            throw new Error("Failed to batch insert jobs: " + error.message);
         }
     }
 

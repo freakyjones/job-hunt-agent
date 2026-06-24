@@ -9,7 +9,7 @@
     "packages/*"
   ],
   "scripts": {
-    "start": "npm run start -w apps/agent --",
+    "start": "pnpm --filter job-hunt-agent run start --",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
@@ -17,9 +17,18 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.9",
+    "@playwright/test": "^1.61.1",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "cross-env": "^10.1.0",
+    "eslint": "^9.0.0",
     "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
     "lint-staged": "^17.0.7",
-    "turbo": "^2.0.4"
+    "prettier": "^3.8.4",
+    "turbo": "^2.0.4",
+    "vitest": "^4.1.9"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -29,5 +38,8 @@
     "*.{json,md,css}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "pino": "^9.0.0"
   }
 }

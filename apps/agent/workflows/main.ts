@@ -124,29 +124,40 @@ async function runScrape(db: DBStateManager) {
     console.log(`Found ${boardJobs.length} board jobs, ${atsJobs.length} ATS jobs. Selected 50/50 mix (${shuffledBoards.length} + ${shuffledAts.length}).`);
     
     let addedCount = 0;
+    const pendingJobs: Job[] = [];
+    const allJobIds = [];
+
     for (const details of allJobs) {
         const stableString = `${details.company.trim().toLowerCase()}||${details.title.trim().toLowerCase()}`;
         const id = crypto.createHash('md5').update(stableString).digest('hex');
-        
-        if (await db.isJobProcessed(id)) {
+        details.id = id;
+        allJobIds.push(id);
+    }
+
+    const processedIds = await db.getProcessedJobs(allJobIds);
+
+    for (const details of allJobs) {
+        if (processedIds.has(details.id)) {
             console.log(`Skipping already processed: ${details.url}`);
             continue;
         }
 
+        pendingJobs.push({
+            id: details.id,
+            company: details.company,
+            role: details.title,
+            url: details.url,
+            status: JobStatus.PENDING
+        });
+    }
+
+    if (pendingJobs.length > 0) {
         try {
-            const job: Job = {
-                id,
-                company: details.company,
-                role: details.title,
-                url: details.url,
-                status: JobStatus.PENDING
-            };
-            
-            await db.addPendingJob(job);
-            addedCount++;
+            await db.addPendingJobs(pendingJobs);
+            addedCount = pendingJobs.length;
         } catch (e: unknown) {
             if (e instanceof Error) {
-                console.error(`Failed to process ${details.url}:`, e.message);
+                console.error(`Failed to batch insert jobs:`, e.message);
             }
         }
     }
@@ -256,6 +267,8 @@ async function runApply(db: DBStateManager) {
     const masterResumePath = fs.existsSync(rootResumePath) ? rootResumePath : localResumePath;
     const masterResume = fs.existsSync(masterResumePath) ? fs.readFileSync(masterResumePath, 'utf8') : '';
 
+    await autoApplier.init();
+
     for (const job of acceptedJobs) {
         console.log(`Auto-Applying to accepted job: ${job.company}`);
         await db.updateJobStatus(job.id, JobStatus.APPLYING);
@@ -285,6 +298,8 @@ async function runApply(db: DBStateManager) {
             await db.updateJobStatus(job.id, JobStatus.ERROR);
         }
     }
+
+    await autoApplier.close();
 }
 
 /**

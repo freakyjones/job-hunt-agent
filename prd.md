@@ -40,6 +40,8 @@ Build a fully autonomous, zero-cost AI agent that sources job postings, evaluate
 - **Database:** Supabase Postgres (Free Tier).
 - **Notifications:** Resend API.
 - **Monorepo:** pnpm workspaces, centralized ESLint/TSConfig, and Husky lint-staged pre-commit hooks.
+- **Frontend Architecture:** Next.js App Router optimized for SSR/CSR performance.
+- **Styling:** Pure Vanilla CSS & CSS Modules (Strictly no Tailwind CSS).
 
 ## 4. Key Performance Indicators (KPIs)
 - **Scrape Rate:** Number of jobs discovered daily.

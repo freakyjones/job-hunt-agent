@@ -1,8 +1,24 @@
 import { getBrowser } from './playwright_core';
 import { applyToGreenhouse } from './apply_greenhouse';
 import { applyToLever } from './apply_lever';
+import type { Browser } from 'playwright';
 
 export class AutoApplier {
+    private browser: Browser | null = null;
+
+    async init() {
+        if (!this.browser) {
+            this.browser = await getBrowser(true); // Headless mode
+        }
+    }
+
+    async close() {
+        if (this.browser) {
+            await this.browser.close();
+            this.browser = null;
+        }
+    }
+
     async execute(jobUrl: string, company: string, customResumePath?: string): Promise<boolean> {
         console.log(`Starting Auto-Applier for ${company} at ${jobUrl}`);
 
@@ -15,8 +31,11 @@ export class AutoApplier {
             return false;
         }
 
-        const browser = await getBrowser(true); // Headless mode
-        const context = await browser.newContext();
+        if (!this.browser) {
+            await this.init();
+        }
+
+        const context = await this.browser!.newContext();
         const page = await context.newPage();
 
         try {
@@ -37,7 +56,7 @@ export class AutoApplier {
             console.error(`Error during auto-application for ${company}:`, error.message);
             return false;
         } finally {
-            await browser.close();
+            await context.close();
         }
     }
 }

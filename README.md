@@ -4,5 +4,5 @@ Zero-cost, fully autonomous job hunting agent using Google Antigravity SDK, Play
 
 ## Setup
 1. Copy `.env.example` to `.env` and fill in your secrets.
-2. Run `npm install`
+2. Run `pnpm install`
 3. Configure your GitHub Actions.

@@ -1,19 +1,19 @@
+import React from 'react';
 import { Job, JobStatus } from '@job-hunt/types';
 import styles from '../../../app/page.module.css';
 import { TailorResumeButton } from './TailorResumeButton';
 
 interface JobCardProps {
     job: Job;
-    index: number;
     masterResume: string;
     onUpdateStatus: (id: string, newStatus: JobStatus, oldStatus: JobStatus) => void;
 }
 
-export function JobCard({ job, index, masterResume, onUpdateStatus }: JobCardProps) {
+export const JobCard = React.memo(function JobCard({ job, masterResume, onUpdateStatus }: JobCardProps) {
     const isAutoApplicable = job.url?.includes('lever.co') || job.url?.includes('greenhouse.io');
 
     return (
-        <div className={`glass-panel ${styles.jobCard} animate-fade-in`} data-status={job.status} style={{ animationDelay: `${(index % 10) * 0.05}s` }}>
+        <div className={`glass-panel ${styles.jobCard} animate-fade-in`} data-status={job.status}>
             <div className={styles.jobHeader}>
                 <div>
                     <h3 className={styles.jobTitle}>{job.role}</h3>
@@ -32,7 +32,7 @@ export function JobCard({ job, index, masterResume, onUpdateStatus }: JobCardPro
                 {job.reasoning || (job.status === JobStatus.ERROR ? "Failed to evaluate or apply." : "Evaluation pending...")}
             </div>
 
-            <div className={styles.actions}>
+            <div className={styles.actions} style={{ minHeight: '40px' }}>
                 <a href={job.url || '#'} target="_blank" rel="noreferrer" className="button button-primary">View Job</a>
                 {(job.status === JobStatus.PENDING || job.status === JobStatus.EVALUATED || job.status === JobStatus.ERROR) && (
                     <>
@@ -46,7 +46,10 @@ export function JobCard({ job, index, masterResume, onUpdateStatus }: JobCardPro
                 )}
                 {job.status === JobStatus.ACCEPTED && <button className="button button-success" disabled style={{ opacity: 0.5 }}>Queued</button>}
                 {job.status === JobStatus.SAVED && (
-                    <TailorResumeButton job={job} masterResumeContent={masterResume} />
+                    <>
+                        <TailorResumeButton job={job} masterResumeContent={masterResume} />
+                        <button className="button button-success" onClick={() => onUpdateStatus(job.id, JobStatus.APPLIED, job.status as JobStatus)}>Mark as Applied</button>
+                    </>
                 )}
                 {job.status === JobStatus.APPLYING && <button className="button button-success" disabled style={{ opacity: 0.5 }}>Applying</button>}
                 {job.status === JobStatus.APPLIED && <button className="button button-success" disabled style={{ opacity: 0.5 }}>Applied</button>}
@@ -54,4 +57,4 @@ export function JobCard({ job, index, masterResume, onUpdateStatus }: JobCardPro
             </div>
         </div>
     );
-}
+});
