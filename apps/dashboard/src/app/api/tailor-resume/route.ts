@@ -70,7 +70,6 @@ Highlight skills from my experience that match the job description. Do NOT fabri
         skills: {
           type: Type.ARRAY,
           items: { type: Type.STRING },
-          description: 'List of relevant skills matching the job description.',
         },
         experience: {
           type: Type.ARRAY,
@@ -104,8 +103,9 @@ Highlight skills from my experience that match the job description. Do NOT fabri
           responseSchema: responseSchema,
         },
       });
-    } catch {
-      console.warn(`Primary model gemini-2.5-flash failed. Falling back...`);
+    } catch (e) {
+      console.error(`Primary model gemini-2.5-flash failed with error:`, e);
+      console.warn(`Falling back to gemma-4-31b-it due to potential rate limits...`);
       response = await ai.models.generateContent({
         model: 'gemma-4-31b-it',
         contents: prompt,
@@ -169,20 +169,19 @@ Highlight skills from my experience that match the job description. Do NOT fabri
       },
     };
 
-    // 3. Generate the document binary chunk inside Node.js
+    // 3. Generate the document binary chunk using isomorphic pdfmake + VFS
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const PdfPrinter = require('pdfmake/js/Printer').default;
-    const printer = new PdfPrinter(fonts);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfDoc = printer.createPdfKitDocument(docDefinition as any);
+    const pdfMake = require('pdfmake/build/pdfmake.js');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const helvetica = require('pdfmake/build/standard-fonts/Helvetica.js');
 
-    const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-      const chunks: Buffer[] = [];
-      pdfDoc.on('data', (chunk: Buffer) => chunks.push(chunk));
-      pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
-      pdfDoc.on('error', reject);
-      pdfDoc.end();
-    });
+    // Inject standard fonts into Virtual File System to bypass fs.readFileSync on Vercel
+    pdfMake.vfs = helvetica.vfs;
+    pdfMake.fonts = fonts;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfDoc = pdfMake.createPdf(docDefinition as any);
+    const pdfBuffer = await pdfDoc.getBuffer();
 
     // 4. Save to Database using the Supabase Server Client
     try {
