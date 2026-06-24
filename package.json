@@ -9,7 +9,7 @@
     "packages/*"
   ],
   "scripts": {
-    "start": "npm run start -w apps/agent --",
+    "start": "pnpm --filter job-hunt-agent run start --",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
