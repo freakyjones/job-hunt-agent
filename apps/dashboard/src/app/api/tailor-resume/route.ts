@@ -171,18 +171,11 @@ Highlight skills from my experience that match the job description. Do NOT fabri
 
     // 3. Generate the document binary chunk inside Node.js
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const PdfPrinter = require('pdfmake/js/Printer').default;
-    const printer = new PdfPrinter(fonts);
+    const pdfMake = require('pdfmake');
+    pdfMake.fonts = fonts;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfDoc = printer.createPdfKitDocument(docDefinition as any);
-
-    const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-      const chunks: Buffer[] = [];
-      pdfDoc.on('data', (chunk: Buffer) => chunks.push(chunk));
-      pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
-      pdfDoc.on('error', reject);
-      pdfDoc.end();
-    });
+    const pdfDoc = pdfMake.createPdf(docDefinition as any);
+    const pdfBuffer = await pdfDoc.getBuffer();
 
     // 4. Save to Database using the Supabase Server Client
     try {
