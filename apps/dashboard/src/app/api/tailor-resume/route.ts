@@ -70,7 +70,6 @@ Highlight skills from my experience that match the job description. Do NOT fabri
         skills: {
           type: Type.ARRAY,
           items: { type: Type.STRING },
-          description: 'List of relevant skills matching the job description.',
         },
         experience: {
           type: Type.ARRAY,
@@ -104,18 +103,9 @@ Highlight skills from my experience that match the job description. Do NOT fabri
           responseSchema: responseSchema,
         },
       });
-    } catch {
-      console.warn(`Primary model gemini-2.5-flash failed. Falling back...`);
-      response = await ai.models.generateContent({
-        model: 'gemma-4-31b-it',
-        contents: prompt,
-        config: {
-          systemInstruction: systemInstruction,
-          maxOutputTokens: 2048,
-          responseMimeType: 'application/json',
-          responseSchema: responseSchema,
-        },
-      });
+    } catch (e) {
+      console.error(`Primary model gemini-2.5-flash failed with error:`, e);
+      throw new Error('AI Model failed to generate tailored resume.');
     }
 
     const jsonText = response.text;
