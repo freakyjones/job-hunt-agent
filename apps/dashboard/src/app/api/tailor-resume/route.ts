@@ -22,6 +22,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: 'GEMINI_API_KEY is missing' }, { status: 500 });
@@ -29,14 +39,16 @@ export async function POST(req: NextRequest) {
 
     const ai = new GoogleGenAI({ apiKey });
 
-    const prompt = `
-        You are an expert resume writer.
-        Extract my master resume and tailor it to the provided job description.
-        
-        CRITICAL REQUIREMENT:
-        You must output pure JSON data matching the required schema. Do NOT invent layout properties.
-        Highlight skills from my experience that match the job description. Do NOT fabricate experience.
+    const systemInstruction = `
+You are an expert resume writer.
+Extract my master resume and tailor it to the provided job description.
 
+CRITICAL REQUIREMENT:
+You must output pure JSON data matching the required schema. Do NOT invent layout properties.
+Highlight skills from my experience that match the job description. Do NOT fabricate experience.
+    `.trim();
+
+    const prompt = `
         <MasterResume>
         ${masterResume}
         </MasterResume>
@@ -86,16 +98,20 @@ export async function POST(req: NextRequest) {
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
+          systemInstruction: systemInstruction,
+          maxOutputTokens: 2048,
           responseMimeType: 'application/json',
           responseSchema: responseSchema,
         },
       });
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       console.warn(`Primary model gemini-2.5-flash failed. Falling back...`);
       response = await ai.models.generateContent({
         model: 'gemma-4-31b-it',
         contents: prompt,
         config: {
+          systemInstruction: systemInstruction,
+          maxOutputTokens: 2048,
           responseMimeType: 'application/json',
           responseSchema: responseSchema,
         },
@@ -109,21 +125,23 @@ export async function POST(req: NextRequest) {
     const tailoredData = JSON.parse(jsonText);
 
     // Map experience array to pdfmake blocks safely
-    const experienceBlocks: any[] = [];
-    tailoredData.experience.forEach((job: any) => {
-      experienceBlocks.push({
-        text: `${job.role} - ${job.company}`,
-        style: 'jobTitle',
-      });
-      experienceBlocks.push({
-        text: job.duration,
-        style: 'jobDuration',
-      });
-      experienceBlocks.push({
-        ul: job.bullets,
-        margin: [0, 5, 0, 15],
-      });
-    });
+    const experienceBlocks: Record<string, unknown>[] = [];
+    tailoredData.experience.forEach(
+      (job: { role: string; company: string; duration: string; bullets: string[] }) => {
+        experienceBlocks.push({
+          text: `${job.role} - ${job.company}`,
+          style: 'jobTitle',
+        });
+        experienceBlocks.push({
+          text: job.duration,
+          style: 'jobDuration',
+        });
+        experienceBlocks.push({
+          ul: job.bullets,
+          margin: [0, 5, 0, 15],
+        });
+      }
+    );
 
     // 2. Hardcode the design layout safely
     const docDefinition = {
@@ -152,8 +170,10 @@ export async function POST(req: NextRequest) {
     };
 
     // 3. Generate the document binary chunk inside Node.js
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const PdfPrinter = require('pdfmake');
     const printer = new PdfPrinter(fonts);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pdfDoc = printer.createPdfKitDocument(docDefinition as any);
 
     const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
@@ -166,34 +186,26 @@ export async function POST(req: NextRequest) {
 
     // 4. Save to Database using the Supabase Server Client
     try {
-      const supabase = await createClient();
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (!userError && user) {
-        // Upload PDF to storage
-        const fileName = `${user.id}/${jobId || 'generic'}_${Date.now()}.pdf`;
-        const { error: uploadError } = await supabase.storage
-          .from('resumes')
-          .upload(fileName, pdfBuffer, {
-            contentType: 'application/pdf',
-            upsert: true,
-          });
-
-        if (uploadError) {
-          console.error('Failed to upload PDF to storage:', uploadError);
-        }
-
-        await supabase.from('generated_resumes').insert({
-          job_id: jobId || null,
-          content: jsonText,
-          pdf_url: uploadError ? null : fileName,
-          user_id: user.id,
-          tags: ['pdf', 'tailored'],
+      // Upload PDF to storage
+      const fileName = `${user.id}/${jobId || 'generic'}_${Date.now()}.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from('resumes')
+        .upload(fileName, pdfBuffer, {
+          contentType: 'application/pdf',
+          upsert: true,
         });
+
+      if (uploadError) {
+        console.error('Failed to upload PDF to storage:', uploadError);
       }
+
+      await supabase.from('generated_resumes').insert({
+        job_id: jobId || null,
+        content: jsonText,
+        pdf_url: uploadError ? null : fileName,
+        user_id: user.id,
+        tags: ['pdf', 'tailored'],
+      });
     } catch (dbErr) {
       console.error('Failed to save generated resume to DB:', dbErr);
       // We do not fail the request if saving to DB fails, still return the PDF.
@@ -206,8 +218,11 @@ export async function POST(req: NextRequest) {
         'Content-Disposition': 'attachment; filename="tailored_resume.pdf"',
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Next.js API Route Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }

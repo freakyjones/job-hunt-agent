@@ -26,3 +26,4 @@
 ## Git & Version Control
 
 - **No Hook Bypassing:** STRICTLY PROHIBITED to use `--no-verify` when committing or pushing. If a pre-commit hook (like husky or lint-staged) fails, you MUST fix the underlying linting or formatting issue before attempting to commit again.
+- **Lint & Type Safety First:** Before committing or pushing to GitHub, you MUST properly fix all type check and lint errors (e.g., using proper interfaces or explicitly typed objects instead of `any`, `// eslint-disable-next-line` where strictly necessary, and renaming unused variables with an underscore `_name`). Do not just ignore them.
