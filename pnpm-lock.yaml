@@ -115,6 +115,9 @@ importers:
       '@google/genai':
         specifier: ^2.8.0
         version: 2.9.0
+      '@job-hunt/logger':
+        specifier: workspace:^
+        version: link:../../packages/logger
       '@job-hunt/types':
         specifier: workspace:*
         version: link:../../packages/types
