@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 describe('Job Evaluator', () => {
   it('should correctly score a perfect match > 85', async () => {

@@ -104,7 +104,7 @@ Highlight skills from my experience that match the job description. Do NOT fabri
           responseSchema: responseSchema,
         },
       });
-    } catch (_error: unknown) {
+    } catch {
       console.warn(`Primary model gemini-2.5-flash failed. Falling back...`);
       response = await ai.models.generateContent({
         model: 'gemma-4-31b-it',
