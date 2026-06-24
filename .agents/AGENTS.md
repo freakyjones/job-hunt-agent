@@ -27,3 +27,8 @@
 
 - **No Hook Bypassing:** STRICTLY PROHIBITED to use `--no-verify` when committing or pushing. If a pre-commit hook (like husky or lint-staged) fails, you MUST fix the underlying linting or formatting issue before attempting to commit again.
 - **Lint & Type Safety First:** Before committing or pushing to GitHub, you MUST properly fix all type check and lint errors (e.g., using proper interfaces or explicitly typed objects instead of `any`, `// eslint-disable-next-line` where strictly necessary, and renaming unused variables with an underscore `_name`). Do not just ignore them.
+
+## AI Model & Quota Management
+
+- **Primary vs Fallback:** The `tailor-resume` API strictly uses `gemini-2.5-flash` as the primary model. However, because `gemini-2.5-flash` has a highly restricted free-tier quota (20 Requests Per Day), you MUST always maintain a fallback block in the `catch` statement.
+- **Valid Fallback Model:** The designated fallback model is `gemma-4-31b-it`. This is a valid, active model in Google AI Studio with a significantly higher daily quota limit (1,500 RPD). Do NOT remove `gemma-4-31b-it` under the assumption that it is a hallucinated or invalid model name.
