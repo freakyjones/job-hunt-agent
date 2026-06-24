@@ -23,6 +23,7 @@ export function TailorResumeButton({ job, masterResumeContent }: TailorResumeBut
             // Invoke the edge function
             const { data, error: invokeError } = await supabase.functions.invoke('tailor-resume', {
                 body: {
+                    jobId: job.id,
                     jobDescription: job.description || job.role,
                     masterResume: masterResumeContent
                 }

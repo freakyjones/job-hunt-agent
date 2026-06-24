@@ -19,7 +19,7 @@ serve(async (req) => {
     }
 
     try {
-        const { jobDescription, masterResume } = await req.json();
+        const { jobId, jobDescription, masterResume } = await req.json();
 
         if (!jobDescription || !masterResume) {
             return new Response(JSON.stringify({ error: "Missing jobDescription or masterResume" }), {
@@ -162,7 +162,48 @@ serve(async (req) => {
             }, (err: any) => reject(err));
         });
 
-        // 4. Stream the binary directly back to your Next.js client
+        // 4. Save to Database
+        try {
+            const authHeader = req.headers.get('Authorization');
+            if (authHeader) {
+                // We use dynamic import for supabase-js to avoid type conflicts in Deno
+                const { createClient } = await import('npm:@supabase/supabase-js@2');
+                const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+                const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+                const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+                    global: { headers: { Authorization: authHeader } }
+                });
+
+                const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+                if (!userError && userData.user) {
+                    // Upload PDF to storage
+                    const fileName = `${userData.user.id}/${jobId || 'generic'}_${Date.now()}.pdf`;
+                    const { error: uploadError } = await supabaseClient.storage
+                        .from('resumes')
+                        .upload(fileName, pdfBuffer, {
+                            contentType: 'application/pdf',
+                            upsert: true
+                        });
+                    
+                    if (uploadError) {
+                        console.error('Failed to upload PDF to storage:', uploadError);
+                    }
+
+                    await supabaseClient.from('generated_resumes').insert({
+                        job_id: jobId || null,
+                        content: jsonText,
+                        pdf_url: uploadError ? null : fileName,
+                        user_id: userData.user.id,
+                        tags: ['pdf', 'tailored']
+                    });
+                }
+            }
+        } catch (dbErr) {
+            console.error('Failed to save generated resume to DB:', dbErr);
+            // We do not fail the request if saving to DB fails, still return the PDF.
+        }
+
+        // 5. Stream the binary directly back to your Next.js client
         return new Response(pdfBuffer, {
             headers: {
                 ...corsHeaders,

@@ -1,31 +1,25 @@
-const { GoogleSpreadsheet } = require('google-spreadsheet');
-const { JWT } = require('google-auth-library');
-
 async function testEnv() {
     console.log("Checking Environment Variables...");
 
     if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY missing");
-    if (!process.env.GOOGLE_SHEETS_DOCUMENT_ID) throw new Error("GOOGLE_SHEETS_DOCUMENT_ID missing");
-    if (!process.env.GOOGLE_SERVICE_ACCOUNT_BASE64) throw new Error("GOOGLE_SERVICE_ACCOUNT_BASE64 missing");
+    if (!process.env.SUPABASE_URL) throw new Error("SUPABASE_URL missing");
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY missing");
 
     console.log("✅ Basic variables exist.");
 
     try {
-        console.log("Testing Google Sheets Connection...");
-        const credsStr = Buffer.from(process.env.GOOGLE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
-        const credentials = JSON.parse(credsStr);
-        
-        const serviceAccountAuth = new JWT({
-            email: credentials.client_email,
-            key: credentials.private_key,
-            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+        console.log("Testing Supabase Connection...");
+        const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/`, {
+            method: 'GET',
+            headers: {
+                'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+            }
         });
-
-        const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEETS_DOCUMENT_ID, serviceAccountAuth);
-        await doc.loadInfo();
-        console.log("✅ Google Sheets connected successfully! Title: " + doc.title);
+        if (!res.ok) throw new Error(`Supabase returned ${res.status}`);
+        console.log("✅ Supabase connected successfully!");
     } catch (e) {
-        console.error("❌ Google Sheets Error:", e.message);
+        console.error("❌ Supabase Error:", e.message);
     }
 
     try {

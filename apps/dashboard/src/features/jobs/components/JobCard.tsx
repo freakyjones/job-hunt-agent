@@ -46,7 +46,10 @@ export function JobCard({ job, index, masterResume, onUpdateStatus }: JobCardPro
                 )}
                 {job.status === JobStatus.ACCEPTED && <button className="button button-success" disabled style={{ opacity: 0.5 }}>Queued</button>}
                 {job.status === JobStatus.SAVED && (
-                    <TailorResumeButton job={job} masterResumeContent={masterResume} />
+                    <>
+                        <TailorResumeButton job={job} masterResumeContent={masterResume} />
+                        <button className="button button-success" onClick={() => onUpdateStatus(job.id, JobStatus.APPLIED, job.status as JobStatus)}>Mark as Applied</button>
+                    </>
                 )}
                 {job.status === JobStatus.APPLYING && <button className="button button-success" disabled style={{ opacity: 0.5 }}>Applying</button>}
                 {job.status === JobStatus.APPLIED && <button className="button button-success" disabled style={{ opacity: 0.5 }}>Applied</button>}

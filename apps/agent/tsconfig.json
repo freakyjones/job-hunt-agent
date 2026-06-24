@@ -4,15 +4,7 @@
     "target": "es2022",
     "module": "commonjs",
     "rootDir": "./",
-    "outDir": "./dist",
-    "esModuleInterop": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "outDir": "./dist"
   },
   "include": ["agent/**/*", "tools/**/*", "workflows/**/*"]
 }

@@ -34,3 +34,16 @@ export const EvaluationResultSchema = z.object({
 
 export type Job = z.infer<typeof JobSchema>;
 export type EvaluationResult = z.infer<typeof EvaluationResultSchema>;
+
+export const GeneratedResumeSchema = z.object({
+    id: z.string().uuid(),
+    job_id: z.string().nullable().optional(),
+    content: z.string(),
+    pdf_url: z.string().url().nullable().optional(),
+    tags: z.array(z.string()).optional(),
+    user_id: z.string().uuid().optional(),
+    created_at: z.string().optional(),
+    updated_at: z.string().optional()
+});
+
+export type GeneratedResume = z.infer<typeof GeneratedResumeSchema>;
