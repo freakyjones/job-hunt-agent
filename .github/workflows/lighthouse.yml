@@ -17,6 +17,14 @@ jobs:
         uses: pnpm/action-setup@v4
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+      - name: Start Supabase Local
+        run: |
+          supabase start
+          echo "NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321" > apps/dashboard/.env.local
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(supabase status | grep 'anon key' | awk '{print $3}')" >> apps/dashboard/.env.local
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(supabase status | grep 'service_role key' | awk '{print $3}')" >> apps/dashboard/.env.local
       - name: Build Next.js
         run: pnpm build
       - name: Run Lighthouse CI
