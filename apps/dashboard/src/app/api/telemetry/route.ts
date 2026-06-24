@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     const metrics = Array.isArray(body.metrics) ? body.metrics : body.name ? [body] : [];
 
     if (metrics.length > 0) {
-      const inserts = metrics.map((m: any) => ({
+      const inserts = metrics.map((m: { name: string; [key: string]: unknown }) => ({
         level: 'info',
         message: `Core Web Vitals Metric: ${m.name}`,
         context: m,

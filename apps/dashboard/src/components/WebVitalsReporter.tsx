@@ -5,7 +5,7 @@ import { useReportWebVitals } from 'next/web-vitals';
 import { useEffect } from 'react';
 
 // Next.js 15+ compatible Web Vitals batching
-// The typing for metric is NextWebVitalsMetric, but we can use any here to keep it simple since it's just passing it along
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const metricsQueue: any[] = [];
 
 function flushQueue() {
