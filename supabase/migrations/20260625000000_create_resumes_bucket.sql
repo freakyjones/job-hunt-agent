@@ -3,8 +3,7 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('resumes', 'resumes', false)
 ON CONFLICT (id) DO NOTHING;
 
--- 2. Enable RLS on storage.objects (if not already enabled)
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
 
 -- 3. Create RLS policies for the 'resumes' bucket
 -- Allow users to SELECT their own files
