@@ -169,10 +169,16 @@ Highlight skills from my experience that match the job description. Do NOT fabri
       },
     };
 
-    // 3. Generate the document binary chunk inside Node.js
+    // 3. Generate the document binary chunk using isomorphic pdfmake + VFS
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfMake = require('pdfmake');
+    const pdfMake = require('pdfmake/build/pdfmake.js');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const helvetica = require('pdfmake/build/standard-fonts/Helvetica.js');
+
+    // Inject standard fonts into Virtual File System to bypass fs.readFileSync on Vercel
+    pdfMake.vfs = helvetica.vfs;
     pdfMake.fonts = fonts;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pdfDoc = pdfMake.createPdf(docDefinition as any);
     const pdfBuffer = await pdfDoc.getBuffer();
