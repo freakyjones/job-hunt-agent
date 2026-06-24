@@ -1,33 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI, Type, Schema } from '@google/genai';
-import PdfPrinter from 'pdfmake';
 import { createClient } from '@/utils/supabase/server';
 
 const fonts = {
-    Helvetica: {
-        normal: 'Helvetica',
-        bold: 'Helvetica-Bold',
-        italics: 'Helvetica-Oblique',
-        bolditalics: 'Helvetica-BoldOblique'
-    }
+  Helvetica: {
+    normal: 'Helvetica',
+    bold: 'Helvetica-Bold',
+    italics: 'Helvetica-Oblique',
+    bolditalics: 'Helvetica-BoldOblique',
+  },
 };
 
 export async function POST(req: NextRequest) {
-    try {
-        const { jobId, jobDescription, masterResume } = await req.json();
+  try {
+    const { jobId, jobDescription, masterResume } = await req.json();
 
-        if (!jobDescription || !masterResume) {
-            return NextResponse.json({ error: "Missing jobDescription or masterResume" }, { status: 400 });
-        }
+    if (!jobDescription || !masterResume) {
+      return NextResponse.json(
+        { error: 'Missing jobDescription or masterResume' },
+        { status: 400 }
+      );
+    }
 
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            return NextResponse.json({ error: "GEMINI_API_KEY is missing" }, { status: 500 });
-        }
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ error: 'GEMINI_API_KEY is missing' }, { status: 500 });
+    }
 
-        const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey });
 
-        const prompt = `
+    const prompt = `
         You are an expert resume writer.
         Extract my master resume and tailor it to the provided job description.
         
@@ -44,162 +46,168 @@ export async function POST(req: NextRequest) {
         </JobDescription>
         `;
 
-        const responseSchema: Schema = {
+    const responseSchema: Schema = {
+      type: Type.OBJECT,
+      properties: {
+        name: { type: Type.STRING },
+        contact: { type: Type.STRING, description: 'Email | Phone | LinkedIn | Portfolio' },
+        summary: {
+          type: Type.STRING,
+          description: 'A highly tailored 2-3 sentence professional summary.',
+        },
+        skills: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING },
+          description: 'List of relevant skills matching the job description.',
+        },
+        experience: {
+          type: Type.ARRAY,
+          items: {
             type: Type.OBJECT,
             properties: {
-                name: { type: Type.STRING },
-                contact: { type: Type.STRING, description: "Email | Phone | LinkedIn | Portfolio" },
-                summary: { type: Type.STRING, description: "A highly tailored 2-3 sentence professional summary." },
-                skills: { 
-                    type: Type.ARRAY, 
-                    items: { type: Type.STRING },
-                    description: "List of relevant skills matching the job description." 
-                },
-                experience: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            role: { type: Type.STRING },
-                            company: { type: Type.STRING },
-                            duration: { type: Type.STRING },
-                            bullets: {
-                                type: Type.ARRAY,
-                                items: { type: Type.STRING }
-                            }
-                        },
-                        required: ["role", "company", "duration", "bullets"]
-                    }
-                }
+              role: { type: Type.STRING },
+              company: { type: Type.STRING },
+              duration: { type: Type.STRING },
+              bullets: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
             },
-            required: ["name", "contact", "summary", "skills", "experience"]
-        };
+            required: ['role', 'company', 'duration', 'bullets'],
+          },
+        },
+      },
+      required: ['name', 'contact', 'summary', 'skills', 'experience'],
+    };
 
-        let response;
-        try {
-            response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: responseSchema
-                }
-            });
-        } catch (error: unknown) {
-            console.warn(`Primary model gemini-2.5-flash failed. Falling back...`);
-            response = await ai.models.generateContent({
-                model: "gemma-4-31b-it",
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: responseSchema
-                }
-            });
-        }
-
-        const jsonText = response.text;
-        if (!jsonText) throw new Error('LLM returned an empty response.');
-
-        // 1. Get the tailored clean data JSON from the AI
-        const tailoredData = JSON.parse(jsonText);
-
-        // Map experience array to pdfmake blocks safely
-        const experienceBlocks: any[] = [];
-        tailoredData.experience.forEach((job: any) => {
-            experienceBlocks.push({
-                text: `${job.role} - ${job.company}`,
-                style: 'jobTitle'
-            });
-            experienceBlocks.push({
-                text: job.duration,
-                style: 'jobDuration'
-            });
-            experienceBlocks.push({
-                ul: job.bullets,
-                margin: [0, 5, 0, 15]
-            });
-        });
-
-        // 2. Hardcode the design layout safely
-        const docDefinition = {
-            content: [
-                { text: tailoredData.name, style: 'header' },
-                { text: tailoredData.contact, style: 'contact' },
-                { text: 'Professional Summary', style: 'sectionHeader' },
-                { text: tailoredData.summary, margin: [0, 5, 0, 20] },
-                { text: 'Skills', style: 'sectionHeader' },
-                { ul: tailoredData.skills, margin: [0, 5, 0, 20] },
-                { text: 'Experience', style: 'sectionHeader' },
-                ...experienceBlocks
-            ],
-            styles: {
-                header: { fontSize: 24, bold: true, alignment: 'center' },
-                contact: { fontSize: 11, alignment: 'center', margin: [0, 5, 0, 20], color: '#555555' },
-                sectionHeader: { fontSize: 14, bold: true, margin: [0, 10, 0, 5], color: '#333333' },
-                jobTitle: { fontSize: 12, bold: true, margin: [0, 5, 0, 2] },
-                jobDuration: { fontSize: 10, italics: true, color: '#777777', margin: [0, 0, 0, 5] }
-            },
-            defaultStyle: {
-                font: 'Helvetica',
-                fontSize: 11,
-                lineHeight: 1.3
-            }
-        };
-
-        // 3. Generate the document binary chunk inside Node.js
-        const printer = new (PdfPrinter as any)(fonts);
-        const pdfDoc = printer.createPdfKitDocument(docDefinition as any);
-        
-        const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-            const chunks: Buffer[] = [];
-            pdfDoc.on('data', (chunk: Buffer) => chunks.push(chunk));
-            pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
-            pdfDoc.on('error', reject);
-            pdfDoc.end();
-        });
-
-        // 4. Save to Database using the Supabase Server Client
-        try {
-            const supabase = await createClient();
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            
-            if (!userError && user) {
-                // Upload PDF to storage
-                const fileName = `${user.id}/${jobId || 'generic'}_${Date.now()}.pdf`;
-                const { error: uploadError } = await supabase.storage
-                    .from('resumes')
-                    .upload(fileName, pdfBuffer, {
-                        contentType: 'application/pdf',
-                        upsert: true
-                    });
-                
-                if (uploadError) {
-                    console.error('Failed to upload PDF to storage:', uploadError);
-                }
-
-                await supabase.from('generated_resumes').insert({
-                    job_id: jobId || null,
-                    content: jsonText,
-                    pdf_url: uploadError ? null : fileName,
-                    user_id: user.id,
-                    tags: ['pdf', 'tailored']
-                });
-            }
-        } catch (dbErr) {
-            console.error('Failed to save generated resume to DB:', dbErr);
-            // We do not fail the request if saving to DB fails, still return the PDF.
-        }
-
-        // 5. Stream the binary directly back to the client
-        return new NextResponse(pdfBuffer as unknown as BodyInit, {
-            headers: {
-                'Content-Type': 'application/pdf',
-                'Content-Disposition': 'attachment; filename="tailored_resume.pdf"'
-            }
-        });
-
-    } catch (error: any) {
-        console.error('Next.js API Route Error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: responseSchema,
+        },
+      });
+    } catch (error: unknown) {
+      console.warn(`Primary model gemini-2.5-flash failed. Falling back...`);
+      response = await ai.models.generateContent({
+        model: 'gemma-4-31b-it',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: responseSchema,
+        },
+      });
     }
+
+    const jsonText = response.text;
+    if (!jsonText) throw new Error('LLM returned an empty response.');
+
+    // 1. Get the tailored clean data JSON from the AI
+    const tailoredData = JSON.parse(jsonText);
+
+    // Map experience array to pdfmake blocks safely
+    const experienceBlocks: any[] = [];
+    tailoredData.experience.forEach((job: any) => {
+      experienceBlocks.push({
+        text: `${job.role} - ${job.company}`,
+        style: 'jobTitle',
+      });
+      experienceBlocks.push({
+        text: job.duration,
+        style: 'jobDuration',
+      });
+      experienceBlocks.push({
+        ul: job.bullets,
+        margin: [0, 5, 0, 15],
+      });
+    });
+
+    // 2. Hardcode the design layout safely
+    const docDefinition = {
+      content: [
+        { text: tailoredData.name, style: 'header' },
+        { text: tailoredData.contact, style: 'contact' },
+        { text: 'Professional Summary', style: 'sectionHeader' },
+        { text: tailoredData.summary, margin: [0, 5, 0, 20] },
+        { text: 'Skills', style: 'sectionHeader' },
+        { ul: tailoredData.skills, margin: [0, 5, 0, 20] },
+        { text: 'Experience', style: 'sectionHeader' },
+        ...experienceBlocks,
+      ],
+      styles: {
+        header: { fontSize: 24, bold: true, alignment: 'center' },
+        contact: { fontSize: 11, alignment: 'center', margin: [0, 5, 0, 20], color: '#555555' },
+        sectionHeader: { fontSize: 14, bold: true, margin: [0, 10, 0, 5], color: '#333333' },
+        jobTitle: { fontSize: 12, bold: true, margin: [0, 5, 0, 2] },
+        jobDuration: { fontSize: 10, italics: true, color: '#777777', margin: [0, 0, 0, 5] },
+      },
+      defaultStyle: {
+        font: 'Helvetica',
+        fontSize: 11,
+        lineHeight: 1.3,
+      },
+    };
+
+    // 3. Generate the document binary chunk inside Node.js
+    const PdfPrinter = require('pdfmake');
+    const printer = new PdfPrinter(fonts);
+    const pdfDoc = printer.createPdfKitDocument(docDefinition as any);
+
+    const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      pdfDoc.on('data', (chunk: Buffer) => chunks.push(chunk));
+      pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
+      pdfDoc.on('error', reject);
+      pdfDoc.end();
+    });
+
+    // 4. Save to Database using the Supabase Server Client
+    try {
+      const supabase = await createClient();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (!userError && user) {
+        // Upload PDF to storage
+        const fileName = `${user.id}/${jobId || 'generic'}_${Date.now()}.pdf`;
+        const { error: uploadError } = await supabase.storage
+          .from('resumes')
+          .upload(fileName, pdfBuffer, {
+            contentType: 'application/pdf',
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error('Failed to upload PDF to storage:', uploadError);
+        }
+
+        await supabase.from('generated_resumes').insert({
+          job_id: jobId || null,
+          content: jsonText,
+          pdf_url: uploadError ? null : fileName,
+          user_id: user.id,
+          tags: ['pdf', 'tailored'],
+        });
+      }
+    } catch (dbErr) {
+      console.error('Failed to save generated resume to DB:', dbErr);
+      // We do not fail the request if saving to DB fails, still return the PDF.
+    }
+
+    // 5. Stream the binary directly back to the client
+    return new NextResponse(pdfBuffer as unknown as BodyInit, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="tailored_resume.pdf"',
+      },
+    });
+  } catch (error: any) {
+    console.error('Next.js API Route Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
