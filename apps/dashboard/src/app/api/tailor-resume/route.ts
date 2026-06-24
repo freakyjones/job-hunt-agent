@@ -105,7 +105,17 @@ Highlight skills from my experience that match the job description. Do NOT fabri
       });
     } catch (e) {
       console.error(`Primary model gemini-2.5-flash failed with error:`, e);
-      throw new Error('AI Model failed to generate tailored resume.');
+      console.warn(`Falling back to gemma-4-31b-it due to potential rate limits...`);
+      response = await ai.models.generateContent({
+        model: 'gemma-4-31b-it',
+        contents: prompt,
+        config: {
+          systemInstruction: systemInstruction,
+          maxOutputTokens: 2048,
+          responseMimeType: 'application/json',
+          responseSchema: responseSchema,
+        },
+      });
     }
 
     const jsonText = response.text;
