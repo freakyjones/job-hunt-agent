@@ -1,36 +1,28 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenAI, Type, Schema } from "npm:@google/genai@^2.8.0";
-// Use esm.sh to automatically inject browser polyfills for Deno
-import pdfMake from "https://esm.sh/pdfmake@0.2.10/build/pdfmake.js";
-import pdfFonts from "https://esm.sh/pdfmake@0.2.10/build/vfs_fonts.js";
+import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenAI, Type, Schema } from '@google/genai';
+import PdfPrinter from 'pdfmake';
+import { createClient } from '@/utils/supabase/server';
 
-// Initialize virtual file system for fonts
-(pdfMake as any).vfs = pdfFonts.pdfMake.vfs;
-
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const fonts = {
+    Helvetica: {
+        normal: 'Helvetica',
+        bold: 'Helvetica-Bold',
+        italics: 'Helvetica-Oblique',
+        bolditalics: 'Helvetica-BoldOblique'
+    }
 };
 
-serve(async (req) => {
-    // Handle CORS preflight
-    if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders });
-    }
-
+export async function POST(req: NextRequest) {
     try {
         const { jobId, jobDescription, masterResume } = await req.json();
 
         if (!jobDescription || !masterResume) {
-            return new Response(JSON.stringify({ error: "Missing jobDescription or masterResume" }), {
-                status: 400,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
+            return NextResponse.json({ error: "Missing jobDescription or masterResume" }, { status: 400 });
         }
 
-        const apiKey = Deno.env.get("GEMINI_API_KEY");
+        const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            throw new Error("GEMINI_API_KEY environment variable is missing in Supabase Secrets.");
+            return NextResponse.json({ error: "GEMINI_API_KEY is missing" }, { status: 500 });
         }
 
         const ai = new GoogleGenAI({ apiKey });
@@ -128,7 +120,7 @@ serve(async (req) => {
             });
         });
 
-        // 2. Hardcode the design layout safely so the LLM can never break it
+        // 2. Hardcode the design layout safely
         const docDefinition = {
             content: [
                 { text: tailoredData.name, style: 'header' },
@@ -148,75 +140,66 @@ serve(async (req) => {
                 jobDuration: { fontSize: 10, italics: true, color: '#777777', margin: [0, 0, 0, 5] }
             },
             defaultStyle: {
+                font: 'Helvetica',
                 fontSize: 11,
                 lineHeight: 1.3
             }
         };
 
-        // 3. Generate the document binary chunk inside Deno
-        const pdfDoc = (pdfMake as any).createPdf(docDefinition);
-
-        const pdfBuffer = await new Promise<Uint8Array>((resolve, reject) => {
-            pdfDoc.getBuffer((data: Uint8Array) => {
-                resolve(data);
-            }, (err: any) => reject(err));
+        // 3. Generate the document binary chunk inside Node.js
+        const printer = new (PdfPrinter as any)(fonts);
+        const pdfDoc = printer.createPdfKitDocument(docDefinition as any);
+        
+        const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
+            const chunks: Buffer[] = [];
+            pdfDoc.on('data', (chunk: Buffer) => chunks.push(chunk));
+            pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
+            pdfDoc.on('error', reject);
+            pdfDoc.end();
         });
 
-        // 4. Save to Database
+        // 4. Save to Database using the Supabase Server Client
         try {
-            const authHeader = req.headers.get('Authorization');
-            if (authHeader) {
-                // We use dynamic import for supabase-js to avoid type conflicts in Deno
-                const { createClient } = await import('npm:@supabase/supabase-js@2');
-                const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-                const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-                const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-                    global: { headers: { Authorization: authHeader } }
-                });
-
-                const { data: userData, error: userError } = await supabaseClient.auth.getUser();
-                if (!userError && userData.user) {
-                    // Upload PDF to storage
-                    const fileName = `${userData.user.id}/${jobId || 'generic'}_${Date.now()}.pdf`;
-                    const { error: uploadError } = await supabaseClient.storage
-                        .from('resumes')
-                        .upload(fileName, pdfBuffer, {
-                            contentType: 'application/pdf',
-                            upsert: true
-                        });
-                    
-                    if (uploadError) {
-                        console.error('Failed to upload PDF to storage:', uploadError);
-                    }
-
-                    await supabaseClient.from('generated_resumes').insert({
-                        job_id: jobId || null,
-                        content: jsonText,
-                        pdf_url: uploadError ? null : fileName,
-                        user_id: userData.user.id,
-                        tags: ['pdf', 'tailored']
+            const supabase = await createClient();
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            
+            if (!userError && user) {
+                // Upload PDF to storage
+                const fileName = `${user.id}/${jobId || 'generic'}_${Date.now()}.pdf`;
+                const { error: uploadError } = await supabase.storage
+                    .from('resumes')
+                    .upload(fileName, pdfBuffer, {
+                        contentType: 'application/pdf',
+                        upsert: true
                     });
+                
+                if (uploadError) {
+                    console.error('Failed to upload PDF to storage:', uploadError);
                 }
+
+                await supabase.from('generated_resumes').insert({
+                    job_id: jobId || null,
+                    content: jsonText,
+                    pdf_url: uploadError ? null : fileName,
+                    user_id: user.id,
+                    tags: ['pdf', 'tailored']
+                });
             }
         } catch (dbErr) {
             console.error('Failed to save generated resume to DB:', dbErr);
             // We do not fail the request if saving to DB fails, still return the PDF.
         }
 
-        // 5. Stream the binary directly back to your Next.js client
-        return new Response(pdfBuffer, {
+        // 5. Stream the binary directly back to the client
+        return new NextResponse(pdfBuffer as unknown as BodyInit, {
             headers: {
-                ...corsHeaders,
                 'Content-Type': 'application/pdf',
                 'Content-Disposition': 'attachment; filename="tailored_resume.pdf"'
             }
         });
 
     } catch (error: any) {
-        console.error('Edge Function Error:', error);
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        console.error('Next.js API Route Error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
-});
+}

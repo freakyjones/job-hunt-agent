@@ -29,13 +29,13 @@ export function Header() {
         <header className={styles.header}>
             <h1 className={styles.title}>Dashboard</h1>
             <div style={{ display: 'flex', gap: '10px' }}>
-                <button className={`button button-primary ${isTriggering ? 'opacity-50' : ''}`} onClick={() => handleTrigger('scrape')} disabled={isTriggering}>
+                <button className="button button-primary" onClick={() => handleTrigger('scrape')} disabled={isTriggering} style={isTriggering ? { opacity: 0.5 } : undefined}>
                     Force Scrape
                 </button>
-                <button className={`button button-secondary ${isTriggering ? 'opacity-50' : ''}`} onClick={() => handleTrigger('evaluate')} disabled={isTriggering}>
+                <button className="button button-secondary" onClick={() => handleTrigger('evaluate')} disabled={isTriggering} style={isTriggering ? { opacity: 0.5 } : undefined}>
                     Force Evaluate
                 </button>
-                <button className={`button button-primary ${isTriggering ? 'opacity-50' : ''}`} onClick={() => handleTrigger('apply')} disabled={isTriggering} style={{ background: '#10b981', borderColor: '#10b981' }}>
+                <button className="button button-primary" onClick={() => handleTrigger('apply')} disabled={isTriggering} style={{ background: '#10b981', borderColor: '#10b981', ...(isTriggering ? { opacity: 0.5 } : {}) }}>
                     Force Apply
                 </button>
                 <button className="button" onClick={() => startTransition(async () => { await logout(); })}>

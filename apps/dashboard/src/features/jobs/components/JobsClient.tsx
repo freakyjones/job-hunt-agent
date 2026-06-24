@@ -1,12 +1,18 @@
 'use client';
 
-import { useState, useOptimistic, useTransition, useMemo } from 'react';
+import { useState, useOptimistic, useTransition, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import styles from '@/app/page.module.css';
 import toast from 'react-hot-toast';
 import { updateJobStatusAction } from '@/app/actions';
 import { Job, JobStatus } from '@job-hunt/types';
 import { DashboardTabs, TabName } from './DashboardTabs';
 import { JobCard } from './JobCard';
+
+const RealtimeJobListener = dynamic(
+    () => import('./RealtimeJobListener').then(mod => mod.RealtimeJobListener),
+    { ssr: false }
+);
 
 export function JobsClient({ initialJobs, masterResume }: { initialJobs: Job[], masterResume: string }) {
     const [optimisticJobs, addOptimisticJob] = useOptimistic(
@@ -18,7 +24,7 @@ export function JobsClient({ initialJobs, masterResume }: { initialJobs: Job[], 
     const [, startTransition] = useTransition();
     const [activeTab, setActiveTab] = useState<TabName>('inbox');
 
-    const handleUpdateStatus = async (id: string, newStatus: JobStatus, oldStatus: JobStatus) => {
+    const handleUpdateStatus = useCallback(async (id: string, newStatus: JobStatus, oldStatus: JobStatus) => {
         // Optimistic UI Update - Instant Removal/Move
         startTransition(() => {
             addOptimisticJob({ id, status: newStatus });
@@ -49,34 +55,40 @@ export function JobsClient({ initialJobs, masterResume }: { initialJobs: Job[], 
                 </button>
             </div>
         ), { duration: 5000, style: { background: '#333', color: '#fff' } });
-    };
+    }, [addOptimisticJob]);
 
-    // Filtered Arrays
-    const inboxJobs = useMemo(() => optimisticJobs.filter(j => j.status === JobStatus.PENDING || j.status === JobStatus.EVALUATED || j.status === JobStatus.ERROR), [optimisticJobs]);
-    const queueJobs = useMemo(() => optimisticJobs.filter(j => j.status === JobStatus.ACCEPTED || j.status === JobStatus.APPLYING), [optimisticJobs]);
-    const appliedJobs = useMemo(() => optimisticJobs.filter(j => j.status === JobStatus.APPLIED), [optimisticJobs]);
-    const rejectedJobs = useMemo(() => optimisticJobs.filter(j => j.status === JobStatus.REJECTED), [optimisticJobs]);
-    const savedJobs = useMemo(() => optimisticJobs.filter(j => j.status === JobStatus.SAVED), [optimisticJobs]);
+    // Single-Pass Array Reduction Grouping
+    const groupedJobs = useMemo(() => {
+        return optimisticJobs.reduce((acc, job) => {
+            if (job.status === JobStatus.PENDING || job.status === JobStatus.EVALUATED || job.status === JobStatus.ERROR) acc.inbox.push(job);
+            else if (job.status === JobStatus.ACCEPTED || job.status === JobStatus.APPLYING) acc.queue.push(job);
+            else if (job.status === JobStatus.APPLIED) acc.applied.push(job);
+            else if (job.status === JobStatus.REJECTED) acc.rejected.push(job);
+            else if (job.status === JobStatus.SAVED) acc.saved.push(job);
+            return acc;
+        }, { inbox: [], queue: [], applied: [], rejected: [], saved: [] } as Record<string, Job[]>);
+    }, [optimisticJobs]);
 
     const displayJobs = useMemo(() => {
-        if (activeTab === 'inbox') return inboxJobs;
-        if (activeTab === 'queue') return queueJobs;
-        if (activeTab === 'applied') return appliedJobs;
-        if (activeTab === 'saved') return savedJobs;
-        return rejectedJobs;
-    }, [activeTab, inboxJobs, queueJobs, appliedJobs, rejectedJobs, savedJobs]);
+        if (activeTab === 'inbox') return groupedJobs.inbox;
+        if (activeTab === 'queue') return groupedJobs.queue;
+        if (activeTab === 'applied') return groupedJobs.applied;
+        if (activeTab === 'saved') return groupedJobs.saved;
+        return groupedJobs.rejected;
+    }, [activeTab, groupedJobs]);
 
     return (
         <div className={styles.container}>
+            <RealtimeJobListener />
             <DashboardTabs 
                 activeTab={activeTab} 
                 setActiveTab={setActiveTab} 
                 counts={{
-                    inbox: inboxJobs.length,
-                    queue: queueJobs.length,
-                    saved: savedJobs.length,
-                    applied: appliedJobs.length,
-                    rejected: rejectedJobs.length
+                    inbox: groupedJobs.inbox.length,
+                    queue: groupedJobs.queue.length,
+                    saved: groupedJobs.saved.length,
+                    applied: groupedJobs.applied.length,
+                    rejected: groupedJobs.rejected.length
                 }} 
             />
 
@@ -87,11 +99,10 @@ export function JobsClient({ initialJobs, masterResume }: { initialJobs: Job[], 
             )}
 
             <div className={styles.grid}>
-                {displayJobs.map((job, index) => (
+                {displayJobs.map((job) => (
                     <JobCard 
                         key={job.id} 
                         job={job} 
-                        index={index} 
                         onUpdateStatus={handleUpdateStatus} 
                         masterResume={masterResume} 
                     />

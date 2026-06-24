@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { getJobs, updateJobStatus } from '../features/jobs/services/jobs';
 import { triggerScraperWorkflow } from '../features/jobs/services/github';
 import { getResumes } from '../features/resumes/services/resumes';
@@ -34,7 +33,6 @@ export async function getJobsAction() {
 export async function updateJobStatusAction(id: string, newStatusStr: string) {
     try {
         await updateJobStatus(id, newStatusStr);
-        revalidatePath('/');
         return { success: true };
     } catch (e: unknown) {
         if (e instanceof Error) {

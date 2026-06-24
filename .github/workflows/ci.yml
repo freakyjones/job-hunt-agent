@@ -17,8 +17,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -29,5 +27,14 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        
+      - name: Start Supabase Local
+        run: supabase start
+
       - name: Run Checks and Build
-        run: pnpm turbo run lint typecheck build --filter="...[origin/main]"
+        run: pnpm turbo run lint typecheck test build --filter="...[origin/main]"
+        env:
+          SUPABASE_URL: http://127.0.0.1:54321
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...

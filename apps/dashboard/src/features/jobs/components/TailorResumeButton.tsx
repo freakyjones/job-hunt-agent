@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import React, { useState } from 'react';
 import { Job } from '@job-hunt/types';
 
 interface TailorResumeButtonProps {
@@ -9,7 +8,7 @@ interface TailorResumeButtonProps {
     masterResumeContent: string;
 }
 
-export function TailorResumeButton({ job, masterResumeContent }: TailorResumeButtonProps) {
+export const TailorResumeButton = React.memo(function TailorResumeButton({ job, masterResumeContent }: TailorResumeButtonProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -18,33 +17,33 @@ export function TailorResumeButton({ job, masterResumeContent }: TailorResumeBut
         setError(null);
         
         try {
-            const supabase = createClient();
-            
-            // Invoke the edge function
-            const { data, error: invokeError } = await supabase.functions.invoke('tailor-resume', {
-                body: {
+            const res = await fetch('/api/tailor-resume', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
                     jobId: job.id,
                     jobDescription: job.description || job.role,
                     masterResume: masterResumeContent
-                }
+                })
             });
 
-            if (invokeError) throw new Error(invokeError.message);
-
-            // The data is a Blob because the Edge Function returned an application/pdf
-            if (data instanceof Blob) {
-                const url = window.URL.createObjectURL(data);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = `resume_${job.company.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            } else {
-                throw new Error("Unexpected response type from Edge Function");
+            if (!res.ok) {
+                const errData = await res.json().catch(() => null);
+                throw new Error(errData?.error || `Request failed with status ${res.status}`);
             }
+
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `resume_${job.company.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
             
         } catch (err: unknown) {
             console.error('Failed to generate resume:', err);
@@ -71,4 +70,4 @@ export function TailorResumeButton({ job, masterResumeContent }: TailorResumeBut
             {error && <span style={{ color: '#ef4444', fontSize: '12px', marginLeft: '8px' }}>{error}</span>}
         </div>
     );
-}
+});
