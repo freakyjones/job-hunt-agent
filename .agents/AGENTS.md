@@ -32,3 +32,10 @@
 
 - **Primary vs Fallback:** The `tailor-resume` API strictly uses `gemini-2.5-flash` as the primary model. However, because `gemini-2.5-flash` has a highly restricted free-tier quota (20 Requests Per Day), you MUST always maintain a fallback block in the `catch` statement.
 - **Valid Fallback Model:** The designated fallback model is `gemma-4-31b-it`. This is a valid, active model in Google AI Studio with a significantly higher daily quota limit (1,500 RPD). Do NOT remove `gemma-4-31b-it` under the assumption that it is a hallucinated or invalid model name.
+
+## Architecture & Resilience Guidelines
+
+- **Frontend Server Components (Next.js):** Never `throw` errors inside data-fetching services (e.g., Supabase queries). Always return a Result object (e.g., `{ data, error }`), wrap the query in an exponential backoff retry loop, and use React `<Suspense>` boundaries to gracefully degrade the UI on network failures.
+- **Automated Browser Management:** All Playwright and Puppeteer workflows must strictly wrap browser/context instantiation in a `try...finally { await context.close(); }` block to prevent zombie processes and memory leaks on GitHub Actions runners.
+- **Data Deduplication:** Strictly rely on Database-level constraints (e.g., `UNIQUE(url)`) paired with `upsert` queries for deduplication. Never manage deduplication state via in-memory hashing or arrays.
+- **Scraping Strategy:** Always prioritize intercepting background network APIs (e.g., `page.on('response')` to catch JSON/GraphQL) before falling back to DOM parsing (CSS selectors).

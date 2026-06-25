@@ -18,10 +18,11 @@ export async function getJobs(): Promise<{ data: Job[] | null; error?: string }>
       }
 
       return { data: data as Job[] };
-    } catch (err: any) {
+    } catch (err: unknown) {
       attempts++;
       if (attempts >= 3) {
-        return { data: null, error: err.message || 'Failed to connect to database.' };
+        const errorMessage = err instanceof Error ? err.message : 'Failed to connect to database.';
+        return { data: null, error: errorMessage };
       }
       // Simple exponential backoff: 500ms, 1000ms
       await new Promise((res) => setTimeout(res, 500 * attempts));
