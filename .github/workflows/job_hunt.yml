@@ -42,7 +42,7 @@ jobs:
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: pnpm --filter job-hunt-agent run start -- scrape
+        run: pnpm --filter job-hunt-agent run start scrape
 
 
       - name: Run Evaluator Workflow (Workflow B)
@@ -53,7 +53,7 @@ jobs:
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: pnpm --filter job-hunt-agent run start -- evaluate
+        run: pnpm --filter job-hunt-agent run start evaluate
 
       - name: Run Auto-Applier Workflow (Workflow C)
         if: ${{ github.event_name == 'schedule' || github.event.inputs.command == 'all' || github.event.inputs.command == 'apply' }}
@@ -63,7 +63,7 @@ jobs:
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: pnpm --filter job-hunt-agent run start -- apply
+        run: pnpm --filter job-hunt-agent run start apply
 
       - name: Upload Playwright Screenshots
         uses: actions/upload-artifact@v4
