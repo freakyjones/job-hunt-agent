@@ -1,8 +1,8 @@
 import { Resend } from 'resend';
 
 export interface NotificationPayload {
-    subject: string;
-    body: string;
+  subject: string;
+  body: string;
 }
 
 /**
@@ -10,31 +10,37 @@ export interface NotificationPayload {
  * Requires RESEND_API_KEY and EMAIL_TO in the environment variables.
  */
 export async function sendEmailNotification(payload: NotificationPayload): Promise<void> {
-    const apiKey = process.env.RESEND_API_KEY;
-    const emailTo = process.env.EMAIL_TO;
+  const apiKey = process.env.RESEND_API_KEY;
+  const emailTo = process.env.EMAIL_TO;
 
-    if (!apiKey || !emailTo) {
-        console.warn('Resend credentials not found. Skipping notification.');
-        return;
+  if (!apiKey || !emailTo) {
+    console.warn('Resend credentials not found. Skipping notification.');
+    return;
+  }
+
+  try {
+    const resend = new Resend(apiKey);
+
+    const { data, error } = await resend.emails.send({
+      from: 'Job Hunt Agent <onboarding@resend.dev>', // Resend testing domain
+      to: emailTo,
+      subject: payload.subject,
+      html: payload.body,
+    });
+
+    if (error) {
+      console.error(
+        'Failed to send Resend notification:',
+        error instanceof Error ? error.message : error
+      );
+      return;
     }
 
-    try {
-        const resend = new Resend(apiKey);
-        
-        const { data, error } = await resend.emails.send({
-            from: 'Job Hunt Agent <onboarding@resend.dev>', // Resend testing domain
-            to: emailTo,
-            subject: payload.subject,
-            html: payload.body,
-        });
-
-        if (error) {
-            console.error('Failed to send Resend notification:', error);
-            return;
-        }
-
-        console.log(`Notification sent successfully via Resend: ${data?.id}`);
-    } catch (error) {
-        console.error('Failed to send Resend notification:', error);
-    }
+    console.log(`Notification sent successfully via Resend: ${data?.id}`);
+  } catch (error) {
+    console.error(
+      'Failed to send Resend notification:',
+      error instanceof Error ? error.message : error
+    );
+  }
 }

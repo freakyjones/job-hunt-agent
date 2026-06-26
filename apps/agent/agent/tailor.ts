@@ -85,8 +85,8 @@ RULES:
           responseSchema: responseSchema,
         },
       });
-    } catch (error: unknown) {
-      console.error('[TailoringAgent] Gemini API failed:', error);
+    } catch (error: any) {
+      console.error('[TailoringAgent] Gemini API failed:', error?.message || error);
       throw new Error('Failed to generate tailored resume content.');
     }
 

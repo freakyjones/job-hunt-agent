@@ -104,7 +104,10 @@ Highlight skills from my experience that match the job description. Do NOT fabri
         },
       });
     } catch (e) {
-      console.error(`Primary model gemini-2.5-flash failed with error:`, e);
+      console.error(
+        `Primary model gemini-2.5-flash failed with error:`,
+        e instanceof Error ? e.message : e
+      );
       console.warn(`Falling back to gemma-4-31b-it due to potential rate limits...`);
       response = await ai.models.generateContent({
         model: 'gemma-4-31b-it',
@@ -195,7 +198,10 @@ Highlight skills from my experience that match the job description. Do NOT fabri
         });
 
       if (uploadError) {
-        console.error('Failed to upload PDF to storage:', uploadError);
+        console.error(
+          'Failed to upload PDF to storage:',
+          uploadError instanceof Error ? uploadError.message : uploadError
+        );
       }
 
       await supabase.from('generated_resumes').insert({
@@ -206,7 +212,10 @@ Highlight skills from my experience that match the job description. Do NOT fabri
         tags: ['pdf', 'tailored'],
       });
     } catch (dbErr) {
-      console.error('Failed to save generated resume to DB:', dbErr);
+      console.error(
+        'Failed to save generated resume to DB:',
+        dbErr instanceof Error ? dbErr.message : dbErr
+      );
       // We do not fail the request if saving to DB fails, still return the PDF.
     }
 
@@ -218,7 +227,7 @@ Highlight skills from my experience that match the job description. Do NOT fabri
       },
     });
   } catch (error: unknown) {
-    console.error('Next.js API Route Error:', error);
+    console.error('Next.js API Route Error:', error instanceof Error ? error.message : error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

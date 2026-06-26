@@ -9,35 +9,46 @@ chromium.use(stealth());
  * Greenhouse uses #content and #header for job details.
  */
 export async function scrapeGreenhouse(url: string): Promise<JobDetails> {
-    console.log(`Scraping Greenhouse job posting: ${url}`);
-    
-    const browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext();
-    const page = await context.newPage();
+  console.log(`Scraping Greenhouse job posting: ${url}`);
 
-    try {
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-        
-        await page.waitForTimeout(1000 + Math.random() * 2000);
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext();
+  const page = await context.newPage();
 
-        const title = await page.locator('#header h1').innerText().catch(() => 'Unknown Title');
-        const company = await page.locator('#header .company-name').innerText().catch(() => 'Unknown Company');
-        
-        // The main JD usually lives in #content
-        const description = await page.locator('#content').innerText().catch(() => '');
+  try {
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-        return {
-            title: title.trim(),
-            company: company.replace('at', '').trim(),
-            description: description.trim(),
-            url,
-            atsType: 'greenhouse'
-        };
+    await page.waitForTimeout(1000 + Math.random() * 2000);
 
-    } catch (error) {
-        console.error(`Failed to scrape Greenhouse URL: ${url}`, error);
-        throw new Error(`Scrape Failed: ${error}`);
-    } finally {
-        await browser.close();
-    }
+    const title = await page
+      .locator('#header h1')
+      .innerText()
+      .catch(() => 'Unknown Title');
+    const company = await page
+      .locator('#header .company-name')
+      .innerText()
+      .catch(() => 'Unknown Company');
+
+    // The main JD usually lives in #content
+    const description = await page
+      .locator('#content')
+      .innerText()
+      .catch(() => '');
+
+    return {
+      title: title.trim(),
+      company: company.replace('at', '').trim(),
+      description: description.trim(),
+      url,
+      atsType: 'greenhouse',
+    };
+  } catch (error) {
+    console.error(
+      `Failed to scrape Greenhouse URL: ${url}`,
+      error instanceof Error ? error.message : error
+    );
+    throw new Error(`Scrape Failed: ${error}`);
+  } finally {
+    await browser.close();
+  }
 }

@@ -18,7 +18,7 @@ export default async function JobsPage() {
         }
       }
     } catch (e) {
-      console.error('Could not read master resume', e);
+      console.error('Could not read master resume', e instanceof Error ? e.message : e);
     }
     return '';
   })();

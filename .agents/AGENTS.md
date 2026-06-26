@@ -39,3 +39,4 @@
 - **Automated Browser Management:** All Playwright and Puppeteer workflows must strictly wrap browser/context instantiation in a `try...finally { await context.close(); }` block to prevent zombie processes and memory leaks on GitHub Actions runners.
 - **Data Deduplication:** Strictly rely on Database-level constraints (e.g., `UNIQUE(url)`) paired with `upsert` queries for deduplication. Never manage deduplication state via in-memory hashing or arrays.
 - **Scraping Strategy:** Always prioritize intercepting background network APIs (e.g., `page.on('response')` to catch JSON/GraphQL) before falling back to DOM parsing (CSS selectors).
+- **Error Catching Safety:** Never log raw error objects (e.g., `console.error(e)`) in `catch` blocks, as they pollute CI/CD logs with massive stack traces (e.g., from Playwright or APIs). Always safely extract the message: `console.error(e instanceof Error ? e.message : e)`.
