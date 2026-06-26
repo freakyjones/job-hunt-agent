@@ -49,7 +49,7 @@ export const TailorResumeButton = React.memo(function TailorResumeButton({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err: unknown) {
-      console.error('Failed to generate resume:', err);
+      console.error('Failed to generate resume:', err instanceof Error ? err.message : err);
       if (err instanceof Error) {
         toast.error(err.message);
         setError(err.message);

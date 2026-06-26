@@ -82,7 +82,7 @@ export async function scrapeIndeed(
       console.log(
         `Successfully intercepted ${interceptedJobs.size} jobs via background APIs! Skipping DOM parsing.`
       );
-      jobs.push(...Array.from(interceptedJobs.values()).slice(0, 5));
+      jobs.push(...Array.from(interceptedJobs.values()));
       return jobs;
     }
 
@@ -92,7 +92,7 @@ export async function scrapeIndeed(
     const jobCards = await page.locator('.job_seen_beacon').all();
     console.log(`Found ${jobCards.length} job cards on Indeed via DOM.`);
 
-    for (let i = 0; i < Math.min(jobCards.length, 5); i++) {
+    for (let i = 0; i < jobCards.length; i++) {
       const card = jobCards[i];
 
       try {
@@ -126,18 +126,24 @@ export async function scrapeIndeed(
           });
         }
       } catch (cardError) {
-        console.error('Error parsing an Indeed job card:', cardError);
+        console.error(
+          'Error parsing an Indeed job card:',
+          cardError instanceof Error ? cardError.message : cardError
+        );
       }
     }
   } catch (error) {
-    console.error('Failed to scrape Indeed (Cloudflare block likely):', error);
+    console.error(
+      'Failed to scrape Indeed (Cloudflare block likely):',
+      error instanceof Error ? error.message : error
+    );
     try {
       await page.screenshot({
         path: `playwright-screenshots/indeed_error_${Date.now()}.png`,
         fullPage: true,
       });
     } catch (e) {
-      console.error('Failed to take screenshot:', e);
+      console.error('Failed to take screenshot:', e instanceof Error ? e.message : e);
     }
     throw error;
   } finally {

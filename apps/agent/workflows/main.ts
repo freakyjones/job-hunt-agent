@@ -313,8 +313,8 @@ async function runApply(db: DBStateManager) {
           );
           await db.updateJobStatus(job.id, JobStatus.ERROR);
         }
-      } catch (err) {
-        console.error(`Failed to auto-apply to ${job.company}`, err);
+      } catch (err: any) {
+        console.error(`Failed to auto-apply to ${job.company}:`, err?.message || err);
         await db.updateJobStatus(job.id, JobStatus.ERROR);
       }
     }
@@ -354,14 +354,17 @@ async function main() {
 
 if (require.main === module) {
   main().catch(async (e) => {
-    console.error('Fatal workflow error:', e);
+    console.error('Fatal workflow error:', e instanceof Error ? e.message : e);
     try {
       await sendEmailNotification({
         subject: `[Job Hunt Agent] Fatal Crash`,
         body: `<p>The GitHub Action workflow crashed!</p><pre>${e instanceof Error ? e.stack : e}</pre>`,
       });
     } catch (emailErr) {
-      console.error('Failed to send crash email:', emailErr);
+      console.error(
+        'Failed to send crash email:',
+        emailErr instanceof Error ? emailErr.message : emailErr
+      );
     }
     process.exit(1);
   });

@@ -51,7 +51,10 @@ export async function scrapeRssFeed(feedUrl: string): Promise<RssJobDetails[]> {
 
     return jobs;
   } catch (error) {
-    console.error(`Error scraping RSS feed ${feedUrl}:`, error);
+    console.error(
+      `Error scraping RSS feed ${feedUrl}:`,
+      error instanceof Error ? error.message : error
+    );
     return [];
   }
 }
