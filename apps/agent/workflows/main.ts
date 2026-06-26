@@ -75,7 +75,8 @@ async function runScrape(db: DBStateManager) {
   const atsJobs: any[] = [];
   const keywords = ['Frontend Developer', 'Fullstack Developer', 'MERN Developer'];
   const keyword = keywords[Math.floor(Math.random() * keywords.length)];
-  const location = 'Remote India';
+  const locations = ['India', 'Remote'];
+  const location = locations[Math.floor(Math.random() * locations.length)];
 
   console.log('Scraping Naukri...');
   try {
