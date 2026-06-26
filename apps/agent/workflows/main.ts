@@ -74,12 +74,12 @@ async function runScrape(db: DBStateManager) {
   const boardJobs: any[] = [];
   const atsJobs: any[] = [];
   const keywords = ['Frontend Developer', 'Fullstack Developer', 'MERN Developer'];
-  const keyword = keywords[Math.floor(Math.random() * keywords.length)];
   const locations = ['India', 'Remote'];
-  const location = locations[Math.floor(Math.random() * locations.length)];
 
   console.log('Scraping Naukri...');
   try {
+    const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+    const location = locations[Math.floor(Math.random() * locations.length)];
     const naukriJobs = await scrapeNaukri(keyword, location);
     boardJobs.push(...naukriJobs);
   } catch (e: any) {
@@ -88,6 +88,8 @@ async function runScrape(db: DBStateManager) {
 
   console.log('Scraping Indeed...');
   try {
+    const keyword = keywords[Math.floor(Math.random() * keywords.length)];
+    const location = locations[Math.floor(Math.random() * locations.length)];
     const indeedJobs = await scrapeIndeed(keyword, location);
     boardJobs.push(...indeedJobs);
   } catch (e: any) {
@@ -96,6 +98,7 @@ async function runScrape(db: DBStateManager) {
 
   console.log('Polling Top 50 ATS Target Companies...');
   try {
+    const keyword = keywords[Math.floor(Math.random() * keywords.length)];
     const chunks = [];
     for (let i = 0; i < TARGET_COMPANIES.length; i += 10)
       chunks.push(TARGET_COMPANIES.slice(i, i + 10));
