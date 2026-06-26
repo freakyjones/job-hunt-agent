@@ -73,7 +73,8 @@ async function runScrape(db: DBStateManager) {
   const allJobs: any[] = [];
   const boardJobs: any[] = [];
   const atsJobs: any[] = [];
-  const keyword = 'React Developer';
+  const keywords = ['Frontend Developer', 'Fullstack Developer', 'MERN Developer'];
+  const keyword = keywords[Math.floor(Math.random() * keywords.length)];
   const location = 'Remote India';
 
   console.log('Scraping Naukri...');
@@ -100,7 +101,7 @@ async function runScrape(db: DBStateManager) {
     for (const chunk of chunks) {
       const results = await Promise.all(
         chunk.map((c) =>
-          pollATS(c, 'React').catch((e) => {
+          pollATS(c, keyword.split(' ')[0]).catch((e) => {
             console.error(`Failed ATS poll for ${c.name}:`, e.message);
             return [];
           })

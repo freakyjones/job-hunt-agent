@@ -1,0 +1,50 @@
+.sidebar {
+  width: 260px;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.brand {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-high-contrast);
+  margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brandIcon {
+  width: 24px;
+  height: 24px;
+  background: var(--accent-primary);
+  border-radius: 4px;
+}
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.navLink:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-high-contrast);
+}
+.navLinkActive {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-high-contrast);
+  box-shadow: inset 3px 0 0 var(--text-high-contrast);
+}

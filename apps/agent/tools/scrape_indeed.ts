@@ -92,7 +92,8 @@ export async function scrapeIndeed(
     const jobCards = await page.locator('.job_seen_beacon').all();
     console.log(`Found ${jobCards.length} job cards on Indeed via DOM.`);
 
-    for (let i = 0; i < jobCards.length; i++) {
+    const maxCards = Math.min(jobCards.length, 10);
+    for (let i = 0; i < maxCards; i++) {
       const card = jobCards[i];
 
       try {

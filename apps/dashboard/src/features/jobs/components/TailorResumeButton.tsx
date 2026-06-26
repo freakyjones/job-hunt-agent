@@ -63,18 +63,28 @@ export const TailorResumeButton = React.memo(function TailorResumeButton({
   };
 
   return (
-    <div style={{ display: 'inline-block', marginLeft: '8px' }}>
+    <>
       <button
-        className="button button-primary"
+        className="button button-secondary"
         onClick={handleGenerate}
         disabled={isLoading}
-        style={{ background: isLoading ? '#6b7280' : '#4f46e5' }}
+        style={isLoading ? { opacity: 0.5 } : {}}
       >
-        {isLoading ? '⏳ Generating...' : '📄 Tailor Resume PDF'}
+        {isLoading ? '⏳ Tailoring...' : '✨ Tailor PDF'}
       </button>
       {error && (
-        <span style={{ color: '#ef4444', fontSize: '12px', marginLeft: '8px' }}>{error}</span>
+        <span
+          style={{
+            color: 'var(--danger)',
+            fontSize: '11px',
+            position: 'absolute',
+            bottom: '4px',
+            left: '24px',
+          }}
+        >
+          {error}
+        </span>
       )}
-    </div>
+    </>
   );
 });

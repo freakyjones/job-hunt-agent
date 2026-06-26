@@ -39,7 +39,8 @@ export async function scrapeNaukri(
     const jobCards = await page.locator('.srp-jobtuple-wrapper, .jobTuple').all();
     console.log(`Found ${jobCards.length} job cards on Naukri.`);
 
-    for (let i = 0; i < jobCards.length; i++) {
+    const maxCards = Math.min(jobCards.length, 10);
+    for (let i = 0; i < maxCards; i++) {
       const card = jobCards[i];
 
       try {
@@ -58,7 +59,7 @@ export async function scrapeNaukri(
         if (jobUrl) {
           const jobPage = await context.newPage();
           try {
-            await jobPage.goto(jobUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+            await jobPage.goto(jobUrl, { waitUntil: 'domcontentloaded', timeout: 5000 });
             fullDescription = await jobPage
               .locator('.job-desc, .dang-inner-html')
               .innerText()
