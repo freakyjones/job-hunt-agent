@@ -1,23 +1,33 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import ws from 'ws';
 
 // These tests require a running local Supabase instance
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy_anon_key';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'dummy_service_role_key';
 
+function createTestClient(url: string, key: string) {
+  return createClient(url, key, {
+    auth: { persistSession: false },
+    realtime: {
+      transport: ws as any,
+    },
+  });
+}
+
 describe('Row Level Security (RLS) Integration Tests', () => {
   let adminClient: SupabaseClient;
 
   beforeAll(() => {
     // Admin client to bypass RLS for setup/teardown if needed
-    adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    adminClient = createTestClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   });
 
   it.skip("should prevent User A from reading User B's jobs", async () => {
     // 1. Create two separate clients for User A and User B
-    const _clientA = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const _clientB = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const _clientA = createTestClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const _clientB = createTestClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     void _clientA;
     void _clientB;
 
@@ -47,7 +57,7 @@ describe('Row Level Security (RLS) Integration Tests', () => {
   });
 
   it('should prevent unauthenticated users from updating jobs', async () => {
-    const unauthClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const unauthClient = createTestClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Attempt to update a job without an active session
     const { error } = await unauthClient
