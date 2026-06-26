@@ -38,9 +38,11 @@
     "@types/pdfmake": "^0.3.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
-    "typescript": "^5"
+    "typescript": "^5",
+    "ws": "^8.21.0"
   }
 }
