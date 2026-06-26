@@ -30,6 +30,8 @@
     "node_modules",
     "vitest.config.ts",
     "vitest.setup.ts",
-    "__tests__/**/*"
+    "__tests__/**/*",
+    "playwright.config.ts",
+    "tests/**/*"
   ]
 }
