@@ -52,17 +52,24 @@ Build a fully autonomous, zero-cost AI agent that sources job postings, evaluate
 - **Frontend Architecture:** Next.js App Router optimized for SSR/CSR performance. Data loading must utilize the Result Pattern and Suspense boundaries for maximum resilience against transient database drops.
 - **Styling:** Pure Vanilla CSS & CSS Modules (Strictly no Tailwind CSS).
 
-## 4. Key Performance Indicators (KPIs)
+## 4. Testing & Continuous Integration (CI/CD)
+
+- **Unit & UI Testing:** Uses Vitest and React Testing Library configured with `jsdom`. Critical UI flows (e.g., Optimistic hooks, state transitions) must be fully tested.
+- **End-to-End Automation:** Uses Playwright configured to run sequentially (`workers: 1`) against a Next.js production build (`next build && next start`) backed by the local Supabase emulator.
+- **Pre-commit Hooks:** Enforces rapid incremental testing using `vitest related` mapped to Husky and `lint-staged`.
+- **Pipeline:** Full automated pipeline via GitHub Actions triggers on every PR to validate types, linting, unit tests, and Playwright E2E suites.
+
+## 5. Key Performance Indicators (KPIs)
 
 - **Scrape Rate:** Number of jobs discovered daily.
 - **Match Accuracy:** Human-verified alignment of jobs scoring > 85.
 - **Application Success Rate:** Percentage of Playwright scripts that successfully submit the form without failing on CAPTCHAs or broken DOM selectors.
 
-## 5. Security & Privacy
+## 6. Security & Privacy
 
-- **Resume Protection:** Ensure the master resume data is not inadvertently exposed or published.
+- **Resume Protection:** Master resumes are securely stored in a Supabase storage bucket (`base_resumes`) protected by Row Level Security (RLS). They are strictly isolated per authenticated user and never committed to the repository or publicly exposed.
 - **Secret Management:** GitHub Actions Secrets must be used for Supabase credentials, Gemini API keys, and Resend API keys.
 
-## 6. Future Architecture (v2.0)
+## 7. Future Architecture (v2.0)
 
 - **Event-Driven Subagents:** Transition the current Monolithic Sequential Pipeline into isolated Subagents. For example, migrating the Evaluator into a Supabase Edge Function triggered asynchronously by a Webhook when the Sourcing Agent inserts a new job, and isolating the Auto-Applier into an independent scheduled runner that only pulls `ACCEPTED` jobs.

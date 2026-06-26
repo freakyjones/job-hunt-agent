@@ -40,3 +40,9 @@
 - **Data Deduplication:** Strictly rely on Database-level constraints (e.g., `UNIQUE(url)`) paired with `upsert` queries for deduplication. Never manage deduplication state via in-memory hashing or arrays.
 - **Scraping Strategy:** Always prioritize intercepting background network APIs (e.g., `page.on('response')` to catch JSON/GraphQL) before falling back to DOM parsing (CSS selectors).
 - **Error Catching Safety:** Never log raw error objects (e.g., `console.error(e)`) in `catch` blocks, as they pollute CI/CD logs with massive stack traces (e.g., from Playwright or APIs). Always safely extract the message: `console.error(e instanceof Error ? e.message : e)`.
+
+## Testing Guidelines
+
+- **UI Component Testing (Next.js 15+):** When testing React Server Components or `useOptimistic` hooks in a `jsdom` environment with Vitest, you must natively mock `useOptimistic` to behave as standard `useState` dispatch to simulate state transitions correctly. Always mock browser APIs (e.g. `URL.createObjectURL`) when testing client-side blob downloads.
+- **End-to-End Testing (Playwright):** Always run Playwright tests against a production build (`next build && next start`). Disable parallel execution (`workers: 1`) to guarantee deterministic database state using the local Supabase emulator.
+- **Git Hooks:** Fast incremental testing must be maintained via `vitest related --run` inside the `lint-staged` hook to validate only changed files without slowing down commits.

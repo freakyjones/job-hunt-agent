@@ -38,11 +38,10 @@ export const JobCard = React.memo(function JobCard({
         ) : job.status === JobStatus.PENDING ? (
           <div className={styles.pendingBadge}>PENDING</div>
         ) : (
-          <div
-            className={`${styles.scoreBadge} ${isHighMatch ? 'text-ai-gradient' : ''}`}
-            data-high={isHighMatch}
-          >
-            {job.score || 0}/100
+          <div className={styles.scoreBadge} data-high={isHighMatch}>
+            <span className={isHighMatch ? 'text-ai-gradient' : ''}>
+              {job.score != null ? `${job.score}/100` : 'N/A'}
+            </span>
           </div>
         )}
       </div>
