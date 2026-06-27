@@ -1,29 +1,20 @@
 import { JobsClient } from '@/features/jobs/components/JobsClient';
 import { getJobs } from '@/features/jobs/services/jobs';
-import * as fs from 'fs';
-import * as path from 'path';
+
+import { redirect } from 'next/navigation';
+import { getBaseResume } from '@/features/profile/services/profile';
 
 export default async function JobsPage() {
   const jobsResultPromise = getJobs();
+  const resumePromise = getBaseResume();
 
-  const resumePromise = (async () => {
-    try {
-      const resumePath = path.join(process.cwd(), '../../resume.txt');
-      if (fs.existsSync(resumePath)) {
-        return await fs.promises.readFile(resumePath, 'utf8');
-      } else {
-        const localFallback = path.join(process.cwd(), 'resume.txt');
-        if (fs.existsSync(localFallback)) {
-          return await fs.promises.readFile(localFallback, 'utf8');
-        }
-      }
-    } catch (e) {
-      console.error('Could not read master resume', e instanceof Error ? e.message : e);
-    }
-    return '';
-  })();
+  const [jobsResult, resumeResult] = await Promise.all([jobsResultPromise, resumePromise]);
 
-  const [jobsResult, masterResumeContent] = await Promise.all([jobsResultPromise, resumePromise]);
+  if (!resumeResult.data || !resumeResult.data.extracted_content) {
+    redirect('/onboarding');
+  }
+
+  const masterResumeContent = resumeResult.data.extracted_content;
 
   return (
     <>

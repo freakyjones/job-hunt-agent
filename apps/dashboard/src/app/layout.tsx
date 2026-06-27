@@ -1,14 +1,13 @@
-import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
-import "./globals.css";
-import { Toaster } from 'react-hot-toast';
-import { WebVitalsReporter } from '@/components/WebVitalsReporter';
+import type { Metadata } from 'next';
+import { Outfit } from 'next/font/google';
+import './globals.css';
+import { ClientProviders } from '@/components/ClientProviders';
 
-const outfit = Outfit({ subsets: ["latin"] });
+const outfit = Outfit({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Agentic Job Hunt Dashboard",
-  description: "A secure dashboard for your Zero-Cost Job Hunt Agent",
+  title: 'Agentic Job Hunt Dashboard',
+  description: 'A secure dashboard for your Zero-Cost Job Hunt Agent',
 };
 
 export default function RootLayout({
@@ -20,8 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={outfit.className}>
         {children}
-        <Toaster position="bottom-right" />
-        <WebVitalsReporter />
+        <ClientProviders />
       </body>
     </html>
   );

@@ -1,13 +1,30 @@
+'use client';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import styles from './Sidebar.module.css';
 
 export function Sidebar() {
-    return (
-        <aside style={{ width: '250px', background: 'rgba(0,0,0,0.2)', padding: '20px', borderRight: '1px solid rgba(255,255,255,0.1)', height: '100vh', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <h2 style={{ fontSize: '20px', fontWeight: 'bold' }}>Agentic Job Hunt</h2>
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <Link href="/jobs" className="button" style={{ display: 'block', textAlign: 'left', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)' }}>💼 Jobs</Link>
-                <Link href="/resumes" className="button" style={{ display: 'block', textAlign: 'left', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)' }}>📄 Resumes</Link>
-            </nav>
-        </aside>
-    );
+  const pathname = usePathname();
+  const isJobs = pathname ? pathname.startsWith('/jobs') : true;
+  const isResumes = pathname ? pathname.startsWith('/resumes') : false;
+
+  return (
+    <aside className={styles.sidebar}>
+      <div className={styles.brand}>
+        <div className={styles.brandIcon}></div>
+        Agentic Job Hunt
+      </div>
+      <nav className={styles.nav}>
+        <Link href="/jobs" className={`${styles.navLink} ${isJobs ? styles.navLinkActive : ''}`}>
+          💼 Jobs
+        </Link>
+        <Link
+          href="/resumes"
+          className={`${styles.navLink} ${isResumes ? styles.navLinkActive : ''}`}
+        >
+          📄 Resumes
+        </Link>
+      </nav>
+    </aside>
+  );
 }

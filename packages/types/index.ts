@@ -47,3 +47,14 @@ export const GeneratedResumeSchema = z.object({
 });
 
 export type GeneratedResume = z.infer<typeof GeneratedResumeSchema>;
+
+export const BaseResumeSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  file_url: z.string(),
+  extracted_content: z.string().nullable().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+});
+
+export type BaseResume = z.infer<typeof BaseResumeSchema>;

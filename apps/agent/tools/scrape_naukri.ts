@@ -16,14 +16,46 @@ export async function scrapeNaukri(
   const jobs: JobDetails[] = [];
   const browser = await chromium.launch({ headless: true });
 
-  // Create context with standard user agent to avoid basic blocks
   const context = await browser.newContext({
-    userAgent:
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     viewport: { width: 1280, height: 720 },
   });
 
   const page = await context.newPage();
+  const interceptedJobs: Map<string, JobDetails> = new Map();
+
+  // API Interception
+  page.on('response', async (response) => {
+    const resUrl = response.url();
+    if (resUrl.includes('/jobapi/') || resUrl.includes('/api/')) {
+      try {
+        const contentType = response.headers()['content-type'];
+        if (contentType && contentType.includes('application/json')) {
+          const json = await response.json();
+
+          const extractJobs = (obj: any) => {
+            if (!obj) return;
+            if (typeof obj === 'object') {
+              if (obj.jobId && obj.title && obj.companyName) {
+                interceptedJobs.set(obj.jobId, {
+                  title: obj.title,
+                  company: obj.companyName,
+                  description: obj.jobDescription || '',
+                  url: obj.jdURL
+                    ? obj.jdURL.startsWith('http')
+                      ? obj.jdURL
+                      : `https://www.naukri.com${obj.jdURL}`
+                    : `https://www.naukri.com/job-listings-${obj.jobId}`,
+                  atsType: 'unknown',
+                });
+              }
+              Object.values(obj).forEach(extractJobs);
+            }
+          };
+          extractJobs(json);
+        }
+      } catch (e) {}
+    }
+  });
 
   try {
     const query = encodeURIComponent(keyword);
@@ -32,15 +64,27 @@ export async function scrapeNaukri(
 
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
 
-    // Wait for job list to load (Naukri uses class 'srp-jobtuple-wrapper' or 'jobTuple')
+    // Wait for job list to load
     await page.waitForTimeout(3000 + Math.random() * 2000);
+
+    if (interceptedJobs.size > 0) {
+      console.log(
+        `Successfully intercepted ${interceptedJobs.size} jobs via background APIs! Skipping DOM parsing.`
+      );
+      jobs.push(...Array.from(interceptedJobs.values()).slice(0, 10));
+      return jobs;
+    }
+
+    console.log(`API Interception yielded 0 results. Falling back to DOM parsing.`);
 
     // Grab the job cards
     const jobCards = await page.locator('.srp-jobtuple-wrapper, .jobTuple').all();
     console.log(`Found ${jobCards.length} job cards on Naukri.`);
 
-    for (let i = 0; i < jobCards.length; i++) {
+    const maxCards = Math.min(jobCards.length, 10);
+    for (let i = 0; i < maxCards; i++) {
       const card = jobCards[i];
+      await page.waitForTimeout(500 + Math.random() * 1000); // Anti-bot jitter
 
       try {
         const titleLoc = card.locator('.title');
@@ -58,7 +102,7 @@ export async function scrapeNaukri(
         if (jobUrl) {
           const jobPage = await context.newPage();
           try {
-            await jobPage.goto(jobUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+            await jobPage.goto(jobUrl, { waitUntil: 'domcontentloaded', timeout: 5000 });
             fullDescription = await jobPage
               .locator('.job-desc, .dang-inner-html')
               .innerText()

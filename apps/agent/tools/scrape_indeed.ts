@@ -17,8 +17,6 @@ export async function scrapeIndeed(
   const browser = await chromium.launch({ headless: false });
 
   const context = await browser.newContext({
-    userAgent:
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     viewport: { width: 1440, height: 900 },
     locale: 'en-IN',
     timezoneId: 'Asia/Kolkata',
@@ -72,7 +70,19 @@ export async function scrapeIndeed(
 
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
 
-    // Wait for the job cards to appear, passing potential Cloudflare challenge
+    // Cloudflare fast-fail check
+    try {
+      const isBlocked = await page
+        .waitForSelector('.cf-turnstile', { timeout: 3000 })
+        .catch(() => null);
+      if (isBlocked) {
+        throw new Error('Cloudflare Turnstile block detected. Fast-failing to save CI minutes.');
+      }
+    } catch (e: any) {
+      if (e.message.includes('Cloudflare')) throw e;
+    }
+
+    // Wait for the job cards to appear
     await page.waitForSelector('.job_seen_beacon', { timeout: 45000 });
 
     // Give network requests a moment to finish and be processed
@@ -82,7 +92,7 @@ export async function scrapeIndeed(
       console.log(
         `Successfully intercepted ${interceptedJobs.size} jobs via background APIs! Skipping DOM parsing.`
       );
-      jobs.push(...Array.from(interceptedJobs.values()));
+      jobs.push(...Array.from(interceptedJobs.values()).slice(0, 10));
       return jobs;
     }
 
@@ -92,7 +102,8 @@ export async function scrapeIndeed(
     const jobCards = await page.locator('.job_seen_beacon').all();
     console.log(`Found ${jobCards.length} job cards on Indeed via DOM.`);
 
-    for (let i = 0; i < jobCards.length; i++) {
+    const maxCards = Math.min(jobCards.length, 10);
+    for (let i = 0; i < maxCards; i++) {
       const card = jobCards[i];
 
       try {
