@@ -1,30 +1,24 @@
-'use client'
+'use client';
 
-import { useActionState, useEffect } from 'react'
-import { login, signup } from './actions'
-import styles from './login.module.css'
-import toast from 'react-hot-toast'
+import { useActionState } from 'react';
+import { login, signup } from './actions';
+import styles from './login.module.css';
 
-const initialState = { error: null, success: false }
+const initialState = { error: null, success: false };
 
 export function LoginForm() {
-  const [loginState, loginAction, isLoginPending] = useActionState(login, initialState)
-  const [signupState, signupAction, isSignupPending] = useActionState(signup, initialState)
+  const [loginState, loginAction, isLoginPending] = useActionState(login, initialState);
+  const [signupState, signupAction, isSignupPending] = useActionState(signup, initialState);
 
-  useEffect(() => {
-    if (loginState?.error) {
-      toast.error(loginState.error, { style: { background: '#ef4444', color: '#fff', fontWeight: 'bold', padding: '16px', borderRadius: '8px' } })
-    }
-  }, [loginState])
-
-  useEffect(() => {
-    if (signupState?.error) {
-      toast.error(signupState.error, { style: { background: '#ef4444', color: '#fff', fontWeight: 'bold', padding: '16px', borderRadius: '8px' } })
-    }
-  }, [signupState])
+  const error = loginState?.error || signupState?.error;
 
   return (
     <form className={styles.form}>
+      {error && (
+        <div className={styles.errorBanner} role="alert">
+          {error}
+        </div>
+      )}
       <div className={styles.inputGroup}>
         <label className={styles.label} htmlFor="email">
           Email
@@ -42,13 +36,7 @@ export function LoginForm() {
         <label className={styles.label} htmlFor="password">
           Password
         </label>
-        <input
-          className={styles.input}
-          id="password"
-          name="password"
-          type="password"
-          required
-        />
+        <input className={styles.input} id="password" name="password" type="password" required />
       </div>
       <div className={styles.buttonGroup}>
         <button
@@ -69,5 +57,5 @@ export function LoginForm() {
         </button>
       </div>
     </form>
-  )
+  );
 }

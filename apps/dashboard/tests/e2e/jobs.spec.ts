@@ -26,6 +26,7 @@ test.describe('Jobs Workflow', () => {
 
     // Seed a job for this user
     const { error: seedError } = await supabase.from('jobs').insert({
+      id: `job-${Date.now()}`,
       url: `https://example.com/job-${Date.now()}`,
       role: 'Test Software Engineer',
       company: 'E2E Corp',
@@ -35,12 +36,13 @@ test.describe('Jobs Workflow', () => {
     });
     if (seedError) throw seedError;
 
-    // Seed a resume for this user
-    await supabase.from('resumes').insert({
+    // Seed a base resume for this user
+    const { error: resumeError } = await supabase.from('base_resumes').insert({
       user_id: userId,
-      content: 'I am a highly experienced E2E test runner.',
-      is_master: true,
+      file_url: 'http://127.0.0.1:54321/storage/v1/object/sign/base_resumes/resume.pdf',
+      extracted_content: 'I am a highly experienced E2E test runner.',
     });
+    if (resumeError) throw resumeError;
   });
 
   test.afterAll(async () => {
@@ -56,13 +58,14 @@ test.describe('Jobs Workflow', () => {
     await page.fill('input[name="password"]', testPassword);
     await page.click('button:has-text("Log in")');
     await page.waitForURL('**/jobs');
-
     // 2. Verify job is in Inbox (PENDING)
     const inboxTab = page.locator('button:has-text("Inbox")');
+    // Wait for the streaming Next.js server-rendered HTML to finish rendering in the DOM
+    await expect(inboxTab).toBeVisible({ timeout: 15000 });
     await expect(inboxTab).toHaveClass(/activeTab/);
 
     const jobCard = page.locator('h3:has-text("Test Software Engineer")');
-    await expect(jobCard).toBeVisible();
+    await expect(jobCard).toBeVisible({ timeout: 15000 });
 
     // 3. Move job to Saved (Manual)
     await page.click('button:has-text("Save")');

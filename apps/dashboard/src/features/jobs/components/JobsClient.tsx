@@ -8,6 +8,8 @@ import { updateJobStatusAction, triggerGitHubAction } from '@/app/actions';
 import { Job, JobStatus } from '@job-hunt/types';
 import { DashboardTabs, TabName } from './DashboardTabs';
 import { JobCard } from './JobCard';
+import { WorkflowStatusPanel } from './WorkflowStatusPanel';
+import { WorkflowRun } from '../services/jobs';
 
 const RealtimeJobListener = dynamic(
   () => import('./RealtimeJobListener').then((mod) => mod.RealtimeJobListener),
@@ -17,9 +19,11 @@ const RealtimeJobListener = dynamic(
 export function JobsClient({
   initialJobs,
   masterResume,
+  initialWorkflows = [],
 }: {
   initialJobs: Job[];
   masterResume: string;
+  initialWorkflows?: WorkflowRun[];
 }) {
   const [optimisticJobs, addOptimisticJob] = useOptimistic(
     initialJobs,
@@ -133,6 +137,7 @@ export function JobsClient({
   return (
     <div className={styles.container}>
       <RealtimeJobListener />
+      <WorkflowStatusPanel initialWorkflows={initialWorkflows} />
       <div
         style={{
           display: 'flex',

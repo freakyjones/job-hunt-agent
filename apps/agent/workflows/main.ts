@@ -343,7 +343,6 @@ async function main() {
 
   if (command === 'scrape') {
     await runScrape(db);
-    await runEvaluate(db);
   } else if (command === 'evaluate') {
     await runEvaluate(db);
   } else if (command === 'apply') {

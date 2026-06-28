@@ -45,9 +45,10 @@ test.describe('Authentication Flows', () => {
     await page.fill('input[name="password"]', 'WrongPassword!123');
     await page.click('button:has-text("Log in")');
 
-    // Toast error should appear
-    const toast = page.locator('div[role="status"]');
+    // Inline error banner should appear
+    const toast = page
+      .locator('div[role="alert"]')
+      .filter({ hasText: 'Invalid login credentials' });
     await expect(toast).toBeVisible();
-    await expect(toast).toContainText('Invalid login credentials');
   });
 });

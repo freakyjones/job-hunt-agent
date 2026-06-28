@@ -4,5 +4,6 @@ dist/
 .DS_Store
 google-credentials.json
 .turbo
-r e s u m e . t x t  
- e x t r a c t _ r e s u m e . j s  
+resume.txt
+extract_resume.js
+.lighthouseci/

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
         context: m,
       }));
 
-      const supabase = await createClient();
+      const supabase = await createAdminClient();
       await supabase.from('system_logs').insert(inserts);
     }
 
