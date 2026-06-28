@@ -1,9 +1,21 @@
 import { GoogleGenAI, Type, Schema } from '@google/genai';
-import { marked } from 'marked';
-import { getBrowser } from '../tools/playwright_core';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfMake = require('pdfmake/build/pdfmake.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const helvetica = require('pdfmake/build/standard-fonts/Helvetica.js');
+
+const fonts = {
+  Helvetica: {
+    normal: 'Helvetica',
+    bold: 'Helvetica-Bold',
+    italics: 'Helvetica-Oblique',
+    bolditalics: 'Helvetica-BoldOblique',
+  },
+};
 
 export class TailoringAgent {
   private ai: GoogleGenAI;
@@ -86,8 +98,28 @@ RULES:
         },
       });
     } catch (error: any) {
-      console.error('[TailoringAgent] Gemini API failed:', error?.message || error);
-      throw new Error('Failed to generate tailored resume content.');
+      console.warn(
+        `[TailoringAgent] Primary model (${this.modelName}) failed, falling back to gemma-4-31b-it... Error:`,
+        error instanceof Error ? error.message : error
+      );
+      try {
+        response = await this.ai.models.generateContent({
+          model: 'gemma-4-31b-it',
+          contents: prompt,
+          config: {
+            systemInstruction: systemInstruction,
+            maxOutputTokens: 2048,
+            responseMimeType: 'application/json',
+            responseSchema: responseSchema,
+          },
+        });
+      } catch (fallbackError: any) {
+        console.error(
+          '[TailoringAgent] Fallback model also failed:',
+          fallbackError instanceof Error ? fallbackError.message : fallbackError
+        );
+        throw new Error('Failed to generate tailored resume content with both models.');
+      }
     }
 
     const jsonText = response.text;
@@ -97,57 +129,57 @@ RULES:
 
     const data = JSON.parse(jsonText);
 
-    let markdownText = `# ${data.name}\n${data.contact}\n\n## Professional Summary\n${data.summary}\n\n## Skills\n`;
-    data.skills.forEach((skill: string) => (markdownText += `- ${skill}\n`));
-    markdownText += `\n## Experience\n`;
+    // Map experience array to pdfmake blocks safely
+    const experienceBlocks: Record<string, unknown>[] = [];
     data.experience.forEach(
       (job: { role: string; company: string; duration: string; bullets: string[] }) => {
-        markdownText += `### ${job.role} - ${job.company}\n*${job.duration}*\n`;
-        job.bullets.forEach((bullet: string) => (markdownText += `- ${bullet}\n`));
-        markdownText += `\n`;
+        experienceBlocks.push({
+          text: `${job.role} - ${job.company}`,
+          style: 'jobTitle',
+        });
+        experienceBlocks.push({
+          text: job.duration,
+          style: 'jobDuration',
+        });
+        experienceBlocks.push({
+          ul: job.bullets,
+          margin: [0, 5, 0, 15],
+        });
       }
     );
 
-    // Convert Markdown to HTML
-    const htmlBody = await marked.parse(markdownText);
+    // 2. Hardcode the design layout safely matching the dashboard PDF layout
+    const docDefinition = {
+      content: [
+        { text: data.name, style: 'header' },
+        { text: data.contact, style: 'contact' },
+        { text: 'Professional Summary', style: 'sectionHeader' },
+        { text: data.summary, margin: [0, 5, 0, 20] },
+        { text: 'Skills', style: 'sectionHeader' },
+        { ul: data.skills, margin: [0, 5, 0, 20] },
+        { text: 'Experience', style: 'sectionHeader' },
+        ...experienceBlocks,
+      ],
+      styles: {
+        header: { fontSize: 24, bold: true, alignment: 'center' },
+        contact: { fontSize: 11, alignment: 'center', margin: [0, 5, 0, 20], color: '#555555' },
+        sectionHeader: { fontSize: 14, bold: true, margin: [0, 10, 0, 5], color: '#333333' },
+        jobTitle: { fontSize: 12, bold: true, margin: [0, 5, 0, 2] },
+        jobDuration: { fontSize: 10, italics: true, color: '#777777', margin: [0, 0, 0, 5] },
+      },
+      defaultStyle: {
+        font: 'Helvetica',
+        fontSize: 11,
+        lineHeight: 1.3,
+      },
+    };
 
-    const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body {
-                    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-                    font-size: 11pt;
-                    line-height: 1.4;
-                    color: #333;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    padding: 40px;
-                }
-                h1, h2, h3 { color: #111; margin-bottom: 0.5em; }
-                h1 { font-size: 24pt; border-bottom: 2px solid #333; padding-bottom: 5px; }
-                h2 { font-size: 14pt; border-bottom: 1px solid #ccc; margin-top: 1.5em; padding-bottom: 3px; }
-                h3 { font-size: 12pt; margin-top: 1em; }
-                ul { padding-left: 20px; }
-                li { margin-bottom: 5px; }
-                p { margin-bottom: 10px; }
-                a { color: #0066cc; text-decoration: none; }
-            </style>
-        </head>
-        <body>
-            ${htmlBody}
-        </body>
-        </html>
-        `;
+    // Inject standard fonts into Virtual File System
+    pdfMake.vfs = helvetica.vfs;
+    pdfMake.fonts = fonts;
 
-    // Generate PDF using Playwright
-    const browser = await getBrowser(true); // Headless mode
-    const context = await browser.newContext();
-    const page = await context.newPage();
-
-    await page.setContent(htmlContent, { waitUntil: 'networkidle' });
+    const pdfDoc = pdfMake.createPdf(docDefinition);
+    const pdfBuffer = await pdfDoc.getBuffer();
 
     // Ensure output directory exists
     const outputDir = path.join(__dirname, '../../tailored_resumes');
@@ -161,14 +193,7 @@ RULES:
     const pdfFilename = `resume_${safeCompany}_${hash}.pdf`;
     const pdfPath = path.join(outputDir, pdfFilename);
 
-    await page.pdf({
-      path: pdfPath,
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' },
-    });
-
-    await browser.close();
+    fs.writeFileSync(pdfPath, pdfBuffer);
 
     console.log(`[TailoringAgent] Saved custom PDF to ${pdfPath}`);
     return pdfPath;

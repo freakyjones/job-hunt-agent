@@ -14,7 +14,7 @@ export default async function ResumesPage() {
   }
 
   if (!response.success) {
-    throw new Error(response.error || 'Failed to fetch resumes from Supabase');
+    console.error('Failed to fetch resumes:', response.error);
   }
 
   return <ResumesClient resumes={response.data || []} baseResume={baseResume.data} />;

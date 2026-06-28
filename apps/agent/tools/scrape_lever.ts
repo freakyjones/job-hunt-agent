@@ -1,8 +1,4 @@
-import { chromium } from 'playwright-extra';
-import stealth from 'puppeteer-extra-plugin-stealth';
-
-// Apply stealth plugin to avoid basic bot detection
-chromium.use(stealth());
+import { getBrowser } from './playwright_core';
 
 export interface JobDetails {
   title: string;
@@ -19,50 +15,54 @@ export interface JobDetails {
 export async function scrapeLever(url: string): Promise<JobDetails> {
   console.log(`Scraping Lever job posting: ${url}`);
 
-  // Launch headless, but not completely invisible to avoid detection
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext();
-  const page = await context.newPage();
-
+  const browser = await getBrowser(true);
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    const context = await browser.newContext();
+    try {
+      const page = await context.newPage();
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-    // Human-like random delay
-    await page.waitForTimeout(1000 + Math.random() * 2000);
+      // Human-like random delay
+      await page.waitForTimeout(1000 + Math.random() * 2000);
 
-    // Extract title and description
-    const title = await page
-      .locator('.posting-headline h2')
-      .innerText()
-      .catch(() => 'Unknown Title');
-    const company = await page
-      .locator('.posting-headline .sort-by-time')
-      .first()
-      .innerText()
-      .catch(() => 'Unknown Company'); // Rough heuristic for lever
-
-    // Lever usually stores the core JD in multiple section-wrapper div's
-    const descriptionLocators = await page.locator('.section-wrapper .posting-requirements').all();
-    let description = '';
-    for (const loc of descriptionLocators) {
-      description += (await loc.innerText()) + '\n\n';
-    }
-
-    // Fallback if the specific structure isn't found
-    if (!description.trim()) {
-      description = await page
-        .locator('.section-wrapper')
+      // Extract title and description
+      const title = await page
+        .locator('.posting-headline h2')
         .innerText()
-        .catch(() => '');
-    }
+        .catch(() => 'Unknown Title');
+      const company = await page
+        .locator('.posting-headline .sort-by-time')
+        .first()
+        .innerText()
+        .catch(() => 'Unknown Company'); // Rough heuristic for lever
 
-    return {
-      title: title.trim(),
-      company: company.trim(),
-      description: description.trim(),
-      url,
-      atsType: 'lever',
-    };
+      // Lever usually stores the core JD in multiple section-wrapper div's
+      const descriptionLocators = await page
+        .locator('.section-wrapper .posting-requirements')
+        .all();
+      let description = '';
+      for (const loc of descriptionLocators) {
+        description += (await loc.innerText()) + '\n\n';
+      }
+
+      // Fallback if the specific structure isn't found
+      if (!description.trim()) {
+        description = await page
+          .locator('.section-wrapper')
+          .innerText()
+          .catch(() => '');
+      }
+
+      return {
+        title: title.trim(),
+        company: company.trim(),
+        description: description.trim(),
+        url,
+        atsType: 'lever',
+      };
+    } finally {
+      await context.close();
+    }
   } catch (error) {
     console.error(
       `Failed to scrape Lever URL: ${url}`,

@@ -47,12 +47,15 @@ describe('Scraping Tools', () => {
           }
         }),
         waitForTimeout: vi.fn().mockResolvedValue(undefined),
+        waitForSelector: vi.fn().mockResolvedValue(undefined),
+        screenshot: vi.fn().mockResolvedValue(undefined),
         locator: vi.fn(), // Should not be called because we intercept!
         close: vi.fn(),
       };
 
       const mockContext = {
         newPage: vi.fn().mockResolvedValue(mockPage),
+        close: vi.fn().mockResolvedValue(undefined),
       };
 
       const mockBrowser = {

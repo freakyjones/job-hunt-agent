@@ -3,7 +3,7 @@ import { Outfit } from 'next/font/google';
 import './globals.css';
 import { ClientProviders } from '@/components/ClientProviders';
 
-const outfit = Outfit({ subsets: ['latin'] });
+const outfit = Outfit({ subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Agentic Job Hunt Dashboard',

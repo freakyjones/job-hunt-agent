@@ -46,3 +46,12 @@
 - **UI Component Testing (Next.js 15+):** When testing React Server Components or `useOptimistic` hooks in a `jsdom` environment with Vitest, you must natively mock `useOptimistic` to behave as standard `useState` dispatch to simulate state transitions correctly. Always mock browser APIs (e.g. `URL.createObjectURL`) when testing client-side blob downloads.
 - **End-to-End Testing (Playwright):** Always run Playwright tests against a production build (`next build && next start`). Disable parallel execution (`workers: 1`) to guarantee deterministic database state using the local Supabase emulator.
 - **Git Hooks:** Fast incremental testing must be maintained via `vitest related --run` inside the `lint-staged` hook to validate only changed files without slowing down commits.
+
+## Security & Vulnerability Analysis
+
+- **XSS False Positives:** Next.js and React natively escape standard string interpolations (e.g. `{job.description}`). Do NOT flag missing sanitization as an XSS vulnerability unless the code explicitly utilizes `dangerouslySetInnerHTML`.
+- **Credential Leaks:** If you spot sensitive files (e.g., `google-credentials.json`) on disk, do NOT immediately flag a P0 source control leak. You MUST verify if the file is actively tracked by git (via `git ls-files`) or if it is safely ignored in `.gitignore` first.
+
+## Agent Telemetry & Observability
+
+- **No Error Masking:** When writing or modifying Playwright automation scripts (like auto-appliers) or AI evaluators, NEVER mask failures (e.g. `return success || true`). Autonomous agents rely entirely on accurate telemetry; masking failures poisons the data pipeline.
