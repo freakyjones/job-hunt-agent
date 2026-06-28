@@ -37,11 +37,12 @@ test.describe('Jobs Workflow', () => {
     if (seedError) throw seedError;
 
     // Seed a base resume for this user
-    await supabase.from('base_resumes').insert({
+    const { error: resumeError } = await supabase.from('base_resumes').insert({
       user_id: userId,
       file_url: 'http://127.0.0.1:54321/storage/v1/object/sign/base_resumes/resume.pdf',
       extracted_content: 'I am a highly experienced E2E test runner.',
     });
+    if (resumeError) throw resumeError;
   });
 
   test.afterAll(async () => {
