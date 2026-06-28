@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
-import { Outfit } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { ClientProviders } from '@/components/ClientProviders';
-
-const outfit = Outfit({ subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Agentic Job Hunt Dashboard',
@@ -16,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={outfit.className}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body>
         {children}
         <ClientProviders />
       </body>

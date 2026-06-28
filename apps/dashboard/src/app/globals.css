@@ -1,6 +1,3 @@
-@import 'geist/font/sans';
-@import 'geist/font/mono';
-
 :root {
   /* Tactile Obsidian Base */
   --bg-canvas: #09090b;
@@ -21,9 +18,10 @@
   --danger: #ef4444;
 
   --font-sans:
-    'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 body {
