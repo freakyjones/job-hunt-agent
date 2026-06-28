@@ -26,6 +26,7 @@ test.describe('Jobs Workflow', () => {
 
     // Seed a job for this user
     const { error: seedError } = await supabase.from('jobs').insert({
+      id: `job-${Date.now()}`,
       url: `https://example.com/job-${Date.now()}`,
       role: 'Test Software Engineer',
       company: 'E2E Corp',
