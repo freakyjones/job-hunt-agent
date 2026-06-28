@@ -35,11 +35,11 @@ test.describe('Jobs Workflow', () => {
     });
     if (seedError) throw seedError;
 
-    // Seed a resume for this user
-    await supabase.from('resumes').insert({
+    // Seed a base resume for this user
+    await supabase.from('base_resumes').insert({
       user_id: userId,
-      content: 'I am a highly experienced E2E test runner.',
-      is_master: true,
+      file_url: 'http://127.0.0.1:54321/storage/v1/object/sign/base_resumes/resume.pdf',
+      extracted_content: 'I am a highly experienced E2E test runner.',
     });
   });
 

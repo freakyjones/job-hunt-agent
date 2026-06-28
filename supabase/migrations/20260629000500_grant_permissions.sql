@@ -5,7 +5,6 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO postgres, service_role;
 
 -- Grant table-specific CRUD privileges to authenticated users only for the tables they need
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.jobs TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.resumes TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.generated_resumes TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.base_resumes TO authenticated;
 GRANT SELECT ON TABLE public.github_workflow_runs TO authenticated;
