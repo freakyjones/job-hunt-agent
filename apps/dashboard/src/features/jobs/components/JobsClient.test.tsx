@@ -28,6 +28,10 @@ vi.mock('./RealtimeJobListener', () => ({
   RealtimeJobListener: () => <div data-testid="realtime-listener" />,
 }));
 
+vi.mock('./WorkflowStatusPanel', () => ({
+  WorkflowStatusPanel: () => <div data-testid="workflow-status-panel" />,
+}));
+
 const mockJobs = [
   {
     id: '1',

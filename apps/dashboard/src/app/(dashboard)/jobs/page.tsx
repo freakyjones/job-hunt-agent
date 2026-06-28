@@ -1,5 +1,5 @@
 import { JobsClient } from '@/features/jobs/components/JobsClient';
-import { getJobs } from '@/features/jobs/services/jobs';
+import { getJobs, getRecentWorkflows } from '@/features/jobs/services/jobs';
 
 import { redirect } from 'next/navigation';
 import { getBaseResume } from '@/features/profile/services/profile';
@@ -7,8 +7,13 @@ import { getBaseResume } from '@/features/profile/services/profile';
 export default async function JobsPage() {
   const jobsResultPromise = getJobs();
   const resumePromise = getBaseResume();
+  const workflowsPromise = getRecentWorkflows();
 
-  const [jobsResult, resumeResult] = await Promise.all([jobsResultPromise, resumePromise]);
+  const [jobsResult, resumeResult, workflowsResult] = await Promise.all([
+    jobsResultPromise,
+    resumePromise,
+    workflowsPromise,
+  ]);
 
   if (!resumeResult.data || !resumeResult.data.extracted_content) {
     redirect('/onboarding');
@@ -33,7 +38,11 @@ export default async function JobsPage() {
           connection.
         </div>
       )}
-      <JobsClient initialJobs={jobsResult.data || []} masterResume={masterResumeContent} />
+      <JobsClient
+        initialJobs={jobsResult.data || []}
+        masterResume={masterResumeContent}
+        initialWorkflows={workflowsResult.data || []}
+      />
     </>
   );
 }

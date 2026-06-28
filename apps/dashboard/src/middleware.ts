@@ -1,7 +1,14 @@
-import { type NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/utils/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Bypass session check/refresh for public paths to improve performance
+  if (pathname.startsWith('/api/telemetry') || pathname.startsWith('/api/webhooks')) {
+    return NextResponse.next();
+  }
+
   return await updateSession(request);
 }
 

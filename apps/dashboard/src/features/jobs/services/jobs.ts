@@ -41,3 +41,35 @@ export async function updateJobStatus(id: string, newStatusStr: string): Promise
     throw new Error(error.message);
   }
 }
+
+export interface WorkflowRun {
+  id: string;
+  run_id: number;
+  status: string;
+  conclusion: string | null;
+  workflow_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getRecentWorkflows(): Promise<{
+  data: WorkflowRun[] | null;
+  error?: string;
+}> {
+  const supabase = await createClient();
+  try {
+    const { data, error } = await supabase
+      .from('github_workflow_runs')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .limit(5);
+
+    if (error) {
+      return { data: null, error: error.message };
+    }
+    return { data: data as WorkflowRun[] };
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to retrieve workflow runs.';
+    return { data: null, error: errorMessage };
+  }
+}

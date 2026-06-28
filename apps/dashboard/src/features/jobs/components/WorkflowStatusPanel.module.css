@@ -1,0 +1,95 @@
+.panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 8px;
+}
+
+.panelTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-high-contrast);
+}
+
+.workflowList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.workflowItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 14px;
+}
+
+.workflowInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.workflowName {
+  font-weight: 500;
+  color: var(--text-high-contrast);
+}
+
+.workflowMeta {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.statusWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.queued {
+  background-color: var(--text-muted);
+}
+
+.inProgress {
+  background-color: #f1c40f;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.completedSuccess {
+  background-color: #2ecc71;
+}
+
+.completedFailure {
+  background-color: #e74c3c;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}

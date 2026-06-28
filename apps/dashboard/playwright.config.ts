@@ -2,8 +2,18 @@ import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Read from default ".env.local" file.
-dotenv.config({ path: path.resolve(__dirname, '.env.local') });
+// Load environment variables for tests. We prioritize .env.test.local, then fallback to defaults.
+dotenv.config({ path: path.resolve(__dirname, '.env.test.local') });
+
+// Force local emulator variables if not strictly provided
+process.env.NEXT_PUBLIC_SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlZmF1bHQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY3ODk0MDAwMCwiZXhwIjoyMDQ2OTQwMDAwfQ.abcdefghijklmnopqrstuvwxyz';
+process.env.SUPABASE_SERVICE_ROLE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlZmF1bHQiLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNjc4OTQwMDAwLCJleHAiOjIwNDY5NDAwMDB9.abcdefghijklmnopqrstuvwxyz';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
