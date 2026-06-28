@@ -84,11 +84,10 @@ jobs:
           version: latest
 
       - name: Start Supabase Local
-        run: |
-          pnpm exec supabase start
-          echo "NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321" > apps/dashboard/.env.test.local
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(pnpm exec supabase status | grep 'anon key' | awk '{print $3}')" >> apps/dashboard/.env.test.local
-          echo "SUPABASE_SERVICE_ROLE_KEY=$(pnpm exec supabase status | grep 'service_role key' | awk '{print $3}')" >> apps/dashboard/.env.test.local
+        run: pnpm exec supabase start
+
+      - name: Setup E2E Test Environment Keys
+        run: node scripts/setup-test-env.js
 
       - name: Run E2E Tests
         run: pnpm run test:e2e
