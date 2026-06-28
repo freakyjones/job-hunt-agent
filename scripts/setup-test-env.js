@@ -10,10 +10,12 @@ try {
   // 2. Strip ANSI escape/color codes
   const cleanStdout = stdout.replace(/\u001b\[[0-9;]*m/g, '');
 
-  // 3. Match keys using regex (compatible with both old and new Supabase CLI formats)
-  const anonKeyMatch = cleanStdout.match(/(?:anon key\s*:\s*|Publishable\s*│\s*)(\S+)/i);
-  const serviceRoleKeyMatch = cleanStdout.match(/(?:service_role key\s*:\s*|Secret\s*│\s*)(\S+)/i);
-  const apiUrlMatch = cleanStdout.match(/(?:API URL\s*:\s*|Project URL\s*│\s*)(\S+)/i);
+  // 3. Match keys using regex (compatible with both old and new Supabase CLI formats, supporting ASCII pipes and Unicode box drawings)
+  const anonKeyMatch = cleanStdout.match(/(?:anon key\s*:\s*|Publishable\s*[│|]\s*)(\S+)/i);
+  const serviceRoleKeyMatch = cleanStdout.match(
+    /(?:service_role key\s*:\s*|Secret\s*[│|]\s*)(\S+)/i
+  );
+  const apiUrlMatch = cleanStdout.match(/(?:API URL\s*:\s*|Project URL\s*[│|]\s*)(\S+)/i);
 
   if (!anonKeyMatch || !serviceRoleKeyMatch) {
     console.error('Raw Status Output:\n', stdout);
