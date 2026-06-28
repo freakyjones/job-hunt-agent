@@ -60,6 +60,10 @@ test.describe('Jobs Workflow', () => {
     await page.waitForURL('**/jobs');
 
     // 2. Verify job is in Inbox (PENDING)
+    console.log('Current page URL:', page.url());
+    const bodyHTML = await page.innerHTML('body');
+    console.log('Page body HTML:', bodyHTML.substring(0, 1000)); // Log first 1000 chars
+
     const inboxTab = page.locator('button:has-text("Inbox")');
     await expect(inboxTab).toHaveClass(/activeTab/);
 
