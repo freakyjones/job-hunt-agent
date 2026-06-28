@@ -19,7 +19,7 @@ Test timeout of 30000ms exceeded.
 Error: page.waitForURL: Test timeout of 30000ms exceeded.
 =========================== logs ===========================
 waiting for navigation to "**/jobs" until "load"
-  navigated to "http://localhost:3000/login"
+  navigated to "http://localhost:3001/login"
 ============================================================
 ```
 
@@ -30,7 +30,7 @@ waiting for navigation to "**/jobs" until "load"
     - generic [ref=e3]:
         - heading "Job Hunt Agent" [level=1] [ref=e4]
         - generic [ref=e5]:
-            - alert [ref=e6]: Email address "test-1782665453782@example.com" is invalid
+            - alert [ref=e6]: Email address "test-1782678246440@example.com" is invalid
             - generic [ref=e7]:
                 - generic [ref=e8]: Email
                 - textbox "Email" [ref=e9]:
@@ -41,9 +41,7 @@ waiting for navigation to "**/jobs" until "load"
             - generic [ref=e13]:
                 - button "Log in" [ref=e14] [cursor=pointer]
                 - button "Sign up" [ref=e15] [cursor=pointer]
-    - button "Open Next.js Dev Tools" [ref=e21] [cursor=pointer]:
-        - img [ref=e22]
-    - alert [ref=e25]
+    - alert [ref=e16]
 ```
 
 # Test source
@@ -98,10 +96,11 @@ waiting for navigation to "**/jobs" until "load"
   46 |     await page.click('button:has-text("Log in")');
   47 |
   48 |     // Inline error banner should appear
-  49 |     const toast = page.locator('div[role="alert"]');
-  50 |     await expect(toast).toBeVisible();
-  51 |     await expect(toast).toContainText('Invalid login credentials');
-  52 |   });
-  53 | });
-  54 |
+  49 |     const toast = page
+  50 |       .locator('div[role="alert"]')
+  51 |       .filter({ hasText: 'Invalid login credentials' });
+  52 |     await expect(toast).toBeVisible();
+  53 |   });
+  54 | });
+  55 |
 ```

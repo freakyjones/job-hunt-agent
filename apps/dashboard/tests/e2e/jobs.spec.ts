@@ -58,17 +58,14 @@ test.describe('Jobs Workflow', () => {
     await page.fill('input[name="password"]', testPassword);
     await page.click('button:has-text("Log in")');
     await page.waitForURL('**/jobs');
-
     // 2. Verify job is in Inbox (PENDING)
-    console.log('Current page URL:', page.url());
-    const bodyHTML = await page.innerHTML('body');
-    console.log('Page body HTML:', bodyHTML.substring(0, 1000)); // Log first 1000 chars
-
     const inboxTab = page.locator('button:has-text("Inbox")');
+    // Wait for the streaming Next.js server-rendered HTML to finish rendering in the DOM
+    await expect(inboxTab).toBeVisible({ timeout: 15000 });
     await expect(inboxTab).toHaveClass(/activeTab/);
 
     const jobCard = page.locator('h3:has-text("Test Software Engineer")');
-    await expect(jobCard).toBeVisible();
+    await expect(jobCard).toBeVisible({ timeout: 15000 });
 
     // 3. Move job to Saved (Manual)
     await page.click('button:has-text("Save")');
