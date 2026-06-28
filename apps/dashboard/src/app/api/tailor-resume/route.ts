@@ -11,6 +11,31 @@ const fonts = {
   },
 };
 
+function cleanAndParseJSON(text: string) {
+  let cleaned = text.trim();
+
+  // Remove markdown code blocks if present
+  const markdownRegex = /^```(?:json)?\s*([\s\S]*?)\s*```$/i;
+  const match = cleaned.match(markdownRegex);
+  if (match) {
+    cleaned = match[1].trim();
+  }
+
+  try {
+    return JSON.parse(cleaned);
+  } catch (firstError) {
+    // Attempt to fix common LLM JSON syntax errors, specifically unescaped newlines inside strings
+    try {
+      const fixedNewlines = cleaned.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/g, (_, p1) => {
+        return '"' + p1.replace(/\n/g, '\\n').replace(/\r/g, '\\r') + '"';
+      });
+      return JSON.parse(fixedNewlines);
+    } catch (secondError) {
+      throw firstError;
+    }
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { jobId, jobDescription, masterResume } = await req.json();
@@ -98,7 +123,7 @@ Highlight skills from my experience that match the job description. Do NOT fabri
         contents: prompt,
         config: {
           systemInstruction: systemInstruction,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 4096,
           responseMimeType: 'application/json',
           responseSchema: responseSchema,
         },
@@ -114,7 +139,7 @@ Highlight skills from my experience that match the job description. Do NOT fabri
         contents: prompt,
         config: {
           systemInstruction: systemInstruction,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 4096,
           responseMimeType: 'application/json',
           responseSchema: responseSchema,
         },
@@ -125,7 +150,7 @@ Highlight skills from my experience that match the job description. Do NOT fabri
     if (!jsonText) throw new Error('LLM returned an empty response.');
 
     // 1. Get the tailored clean data JSON from the AI
-    const tailoredData = JSON.parse(jsonText);
+    const tailoredData = cleanAndParseJSON(jsonText);
 
     // Map experience array to pdfmake blocks safely
     const experienceBlocks: Record<string, unknown>[] = [];
