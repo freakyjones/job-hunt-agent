@@ -2,6 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import path from 'path';
 
+// Force port 3001 for E2E tests to avoid local dev collisions
+process.env.PORT = '3001';
+
 // Load environment variables for tests. We prioritize .env.test.local, then fallback to defaults.
 dotenv.config({ path: path.resolve(__dirname, '.env.test.local') });
 
@@ -54,7 +57,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm run start -- -p 3001',
+    command: 'npx next start',
     url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
