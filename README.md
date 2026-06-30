@@ -24,6 +24,7 @@ The **Zero-Cost Job Hunt Agent** is a sophisticated, open-source automation tool
 ## ✨ Core Features & Guardrails
 
 - **Zero-Cost Infrastructure:** Runs on Supabase Free Tier, Google AI Studio Free Tier (15 RPM max), and GitHub Actions.
+- **Dynamic Resume Tailoring:** Automatically tailors your master resume to fit the specific job description using the Gemini LLM, maximizing your ATS match rates.
 - **Dynamic Cover Letters:** Cover letters are intelligently generated and attached _only_ if the application form explicitly marks them as a required field.
 - **ATS Whitelisting & Blacklisting:** The Auto-Applier safely targets **Greenhouse** and **Lever**. Complex/Legacy systems like **Workday and Taleo are strictly blacklisted/flagged** for manual review.
 - **Human-in-the-Loop Safety:** Explicit human approval (via email link) is required for the first 10 auto-applications to prevent AI hallucinations during form-filling.
