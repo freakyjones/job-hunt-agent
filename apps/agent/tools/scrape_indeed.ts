@@ -82,8 +82,14 @@ export async function scrapeIndeed(
           if (e.message.includes('Cloudflare')) throw e;
         }
 
-        // Wait for the job cards to appear
-        await page.waitForSelector('.job_seen_beacon', { timeout: 45000 });
+        // Wait for the job cards to appear (catch to allow API interception fallback)
+        let domTimeoutError: Error | null = null;
+        try {
+          await page.waitForSelector('.job_seen_beacon', { timeout: 45000 });
+        } catch (e) {
+          domTimeoutError = e instanceof Error ? e : new Error(String(e));
+          console.warn('DOM wait for Indeed timed out. Checking if API intercepted anything...');
+        }
 
         // Give network requests a moment to finish and be processed
         await page.waitForTimeout(3000);
@@ -96,6 +102,9 @@ export async function scrapeIndeed(
           return jobs;
         }
 
+        if (domTimeoutError) {
+          throw domTimeoutError; // Throw if both DOM and API failed
+        }
         console.log(`API Interception yielded 0 results. Falling back to DOM parsing.`);
 
         // Grab the job cards
