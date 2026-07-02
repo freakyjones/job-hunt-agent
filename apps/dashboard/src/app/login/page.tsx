@@ -2,11 +2,7 @@ import pageStyles from '../page.module.css';
 import { LoginForm } from './LoginForm';
 import { Logo } from '@/features/core/components/Logo';
 import { AnonymousLoginButton } from './AnonymousLoginButton';
-import dynamic from 'next/dynamic';
-
-const AgentVisual = dynamic(() => import('./AgentVisual').then((mod) => mod.AgentVisual), {
-  ssr: false,
-});
+import { AgentVisualDynamic } from './AgentVisualDynamic';
 
 export default function LoginPage() {
   return (
@@ -27,7 +23,7 @@ export default function LoginPage() {
         </p>
 
         <div className={`${pageStyles.heroVisualContainer} animate-fade-in`}>
-          <AgentVisual />
+          <AgentVisualDynamic />
         </div>
       </div>
 
