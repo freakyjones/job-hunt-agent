@@ -53,6 +53,7 @@ export const BaseResumeSchema = z.object({
   user_id: z.string().uuid(),
   file_url: z.string(),
   extracted_content: z.string().nullable().optional(),
+  target_roles: z.array(z.string()).optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 });

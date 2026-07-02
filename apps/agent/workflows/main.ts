@@ -73,7 +73,15 @@ async function runScrape(db: DBStateManager) {
   const allJobs: any[] = [];
   const boardJobs: any[] = [];
   const atsJobs: any[] = [];
-  const keywords = ['Frontend Developer', 'Fullstack Developer', 'MERN Developer'];
+
+  const resumeData = await db.getMasterResumeData();
+  let keywords =
+    resumeData.targetRoles && resumeData.targetRoles.length > 0
+      ? resumeData.targetRoles
+      : ['Software Engineer', 'Fullstack Developer', 'Frontend Developer']; // Fallback
+
+  console.log(`Using target scraping roles: ${keywords.join(', ')}`);
+
   const locations = ['India', 'Remote'];
 
   console.log('Scraping Naukri...');

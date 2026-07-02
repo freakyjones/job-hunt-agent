@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BaseResume } from '@job-hunt/types';
-import { uploadBaseResume } from '@/features/profile/services/profile';
+import { updateTargetRoles, uploadBaseResume } from '@/features/profile/services/profile';
 import { Spinner } from '@/features/core/components/Spinner';
+import { createClient } from '@/utils/supabase/client';
 import styles from './PrimaryResumeCard.module.css';
 
 interface PrimaryResumeCardProps {
@@ -14,6 +15,11 @@ interface PrimaryResumeCardProps {
 export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeCardProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [targetRoles, setTargetRoles] = useState<string[]>(resume.target_roles || []);
+  const [isEditingRoles, setIsEditingRoles] = useState(false);
+  const [newRoleInput, setNewRoleInput] = useState('');
+  const [isSavingRoles, setIsSavingRoles] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -30,6 +36,33 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
   } catch (_e) {
     // Ignore and fallback to raw text
   }
+
+  // Subscribe to realtime updates for target_roles from the Edge Function
+  useEffect(() => {
+    if (!resume.id) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel('resume-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'base_resumes',
+          filter: `id=eq.${resume.id}`,
+        },
+        (payload) => {
+          if (payload.new && payload.new.target_roles) {
+            setTargetRoles(payload.new.target_roles);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [resume.id]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -56,6 +89,37 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
         }
       }
     }
+  };
+
+  const handleSaveRoles = async (rolesToSave: string[]) => {
+    setIsSavingRoles(true);
+    setError(null);
+    const { error: saveError } = await updateTargetRoles(rolesToSave);
+    if (saveError) {
+      setError(saveError);
+      // Revert if failed
+      setTargetRoles(resume.target_roles || []);
+    } else {
+      setTargetRoles(rolesToSave);
+      router.refresh();
+    }
+    setIsSavingRoles(false);
+  };
+
+  const handleAddRole = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && newRoleInput.trim()) {
+      e.preventDefault();
+      const nextRoles = [...targetRoles, newRoleInput.trim()];
+      setTargetRoles(nextRoles);
+      setNewRoleInput('');
+      handleSaveRoles(nextRoles);
+    }
+  };
+
+  const handleRemoveRole = (roleToRemove: string) => {
+    const nextRoles = targetRoles.filter((r) => r !== roleToRemove);
+    setTargetRoles(nextRoles);
+    handleSaveRoles(nextRoles);
   };
 
   return (
@@ -112,6 +176,58 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
         ) : (
           <div className={styles.snapshot}>{snapshot}</div>
         )}
+      </div>
+
+      {/* TARGET ROLES SECTION */}
+      <div className={styles.rolesSection}>
+        <div className={styles.rolesHeader}>
+          <span className={styles.rolesTitle}>🎯 Target Scraping Roles</span>
+          <button
+            className={styles.buttonSecondary}
+            style={{
+              fontSize: '0.75rem',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+            onClick={() => setIsEditingRoles(!isEditingRoles)}
+            disabled={isSavingRoles || isUploading}
+          >
+            {isEditingRoles ? 'Done' : '✏️ Edit'}
+          </button>
+        </div>
+
+        <div className={styles.rolesTags}>
+          {targetRoles.map((role) => (
+            <div key={role} className={styles.roleTag}>
+              {role}
+              {isEditingRoles && (
+                <button onClick={() => handleRemoveRole(role)} title="Remove role">
+                  ×
+                </button>
+              )}
+            </div>
+          ))}
+
+          {isEditingRoles && (
+            <input
+              type="text"
+              className={styles.roleInput}
+              placeholder="Add role & press Enter..."
+              value={newRoleInput}
+              onChange={(e) => setNewRoleInput(e.target.value)}
+              onKeyDown={handleAddRole}
+              disabled={isSavingRoles}
+            />
+          )}
+
+          {targetRoles.length === 0 && !isEditingRoles && (
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              No target roles defined. Agents will use default roles.
+            </span>
+          )}
+        </div>
       </div>
 
       <div className={styles.actions}>

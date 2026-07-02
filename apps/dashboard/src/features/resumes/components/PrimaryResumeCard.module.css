@@ -76,6 +76,76 @@
   font-family: monospace;
 }
 
+.rolesSection {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.rolesHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rolesTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.rolesTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.roleTag {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--primary);
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.roleTag button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  opacity: 0.7;
+}
+
+.roleTag button:hover {
+  opacity: 1;
+}
+
+.roleInput {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  outline: none;
+  min-width: 150px;
+}
+
+.roleInput:focus {
+  border-color: var(--primary);
+}
+
 .actions {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

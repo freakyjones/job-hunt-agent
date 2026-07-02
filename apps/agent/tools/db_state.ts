@@ -106,21 +106,36 @@ export class DBStateManager {
   }
 
   /**
-   * Fetches the extracted text of the master resume from Supabase.
+   * Fetches the extracted text and target roles of the master resume from Supabase.
    */
-  async getMasterResumeText(): Promise<string | null> {
+  async getMasterResumeData(): Promise<{ content: string | null; targetRoles: string[] }> {
     const { data, error } = await this.supabase
       .from('base_resumes')
-      .select('extracted_content')
+      .select('extracted_content, target_roles')
       .eq('user_id', this.userId)
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
 
     if (error || !data) {
-      logger.error('Failed to fetch master resume from DB:', error?.message);
-      return null;
+      logger.error('Failed to fetch master resume data from DB:', error?.message);
+      return { content: null, targetRoles: [] };
     }
-    return data.extracted_content;
+
+    // Parse JSONB target_roles if it exists
+    let roles: string[] = [];
+    if (Array.isArray(data.target_roles)) {
+      roles = data.target_roles;
+    }
+
+    return { content: data.extracted_content, targetRoles: roles };
+  }
+
+  /**
+   * Fetches the extracted text of the master resume from Supabase.
+   */
+  async getMasterResumeText(): Promise<string | null> {
+    const data = await this.getMasterResumeData();
+    return data.content;
   }
 }

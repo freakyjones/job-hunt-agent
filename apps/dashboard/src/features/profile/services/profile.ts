@@ -120,3 +120,29 @@ export async function uploadBaseResume(
     return { data: null, error: e instanceof Error ? e.message : 'Unknown error' };
   }
 }
+
+export async function updateTargetRoles(roles: string[]): Promise<{ error: string | null }> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: 'Not authenticated' };
+    }
+
+    const { error: dbError } = await supabase
+      .from('base_resumes')
+      .update({ target_roles: roles })
+      .eq('user_id', user.id);
+
+    if (dbError) {
+      return { error: `Database error: ${dbError.message}` };
+    }
+
+    return { error: null };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Unknown error' };
+  }
+}
