@@ -4,6 +4,7 @@ import { BaseResume } from '@job-hunt/types';
 import { updateTargetRoles, uploadBaseResume } from '@/features/profile/services/profile';
 import { Spinner } from '@/features/core/components/Spinner';
 import { createClient } from '@/utils/supabase/client';
+import toast from 'react-hot-toast';
 import styles from './PrimaryResumeCard.module.css';
 
 interface PrimaryResumeCardProps {
@@ -19,6 +20,10 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
   const [isEditingRoles, setIsEditingRoles] = useState(false);
   const [newRoleInput, setNewRoleInput] = useState('');
   const [isSavingRoles, setIsSavingRoles] = useState(false);
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
+
+  // Track if update came from user to prevent false AI toasts
+  const isUserEdit = useRef(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -54,6 +59,19 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
         (payload) => {
           if (payload.new && payload.new.target_roles) {
             setTargetRoles(payload.new.target_roles);
+            setIsAiProcessing(false);
+
+            if (!isUserEdit.current) {
+              toast.success(
+                'AI has finished analyzing your resume and updated your target roles!',
+                {
+                  icon: '🤖',
+                  duration: 5000,
+                }
+              );
+            } else {
+              isUserEdit.current = false;
+            }
           }
         }
       )
@@ -78,6 +96,7 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
         if (uploadError) {
           setError(uploadError);
         } else {
+          setIsAiProcessing(true);
           router.refresh();
         }
       } catch (err) {
@@ -92,6 +111,7 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
   };
 
   const handleSaveRoles = async (rolesToSave: string[]) => {
+    isUserEdit.current = true;
     setIsSavingRoles(true);
     setError(null);
     const { error: saveError } = await updateTargetRoles(rolesToSave);
@@ -199,16 +219,25 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
         </div>
 
         <div className={styles.rolesTags}>
-          {targetRoles.map((role) => (
-            <div key={role} className={styles.roleTag}>
-              {role}
-              {isEditingRoles && (
-                <button onClick={() => handleRemoveRole(role)} title="Remove role">
-                  ×
-                </button>
-              )}
+          {isAiProcessing ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0' }}>
+              <Spinner width={16} height={16} style={{ color: 'var(--primary)' }} />
+              <span style={{ fontSize: '0.85rem', color: 'var(--primary)' }}>
+                AI is analyzing your resume...
+              </span>
             </div>
-          ))}
+          ) : (
+            targetRoles.map((role) => (
+              <div key={role} className={styles.roleTag}>
+                {role}
+                {isEditingRoles && (
+                  <button onClick={() => handleRemoveRole(role)} title="Remove role">
+                    ×
+                  </button>
+                )}
+              </div>
+            ))
+          )}
 
           {isEditingRoles && (
             <input
