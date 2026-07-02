@@ -20,15 +20,16 @@
 
 - **Feature-Based Architecture:** The project uses a feature-based architecture (e.g., `apps/dashboard/src/features/jobs/`). Data logic (services) and components should be grouped by feature rather than split into top-level `src/services/` and `src/components/` directories.
 - **Data Layer Isolation:** Never write database queries (Supabase) or external API calls directly inside Next.js components or `app/actions.ts`. All data access logic MUST be placed in dedicated service files within their respective feature directories (e.g., `apps/dashboard/src/features/jobs/services/`).
-- **Component Modularization:** Avoid large "fat components". Break UI elements down into modular, reusable components inside their respective feature directories (e.g., `apps/dashboard/src/features/jobs/components/`). The main router files should primarily serve as state managers and layout composers.
+- **Component Modularization:** Avoid large "fat components". Break UI elements down into modular, reusable, and **highly decoupled** components inside their respective feature directories (e.g., `apps/dashboard/src/features/jobs/components/`). The main router files should primarily serve as state managers and layout composers. **All components MUST be built for scalability and isolation.**
 - **Rendering & Performance:** Strictly adhere to Next.js best practices for Server and Client Components. Dynamically import (`next/dynamic` with `ssr: false`) heavy client-only listeners or components to minimize the initial server payload. Use `Promise.all` for concurrent data fetching on the server.
-- **Styling Constraints:** The project strictly uses pure Vanilla CSS and CSS Modules. Do NOT install or use Tailwind CSS. Rely on the existing globals and design tokens for UI consistency.
+- **Styling Constraints:** The project strictly uses pure Vanilla CSS and CSS Modules. Do NOT install or use Tailwind CSS. Rely on the existing globals and design tokens for UI consistency. **MUST NOT use inline CSS (e.g., `style={{...}}`) under any circumstances; always use external CSS Modules or global classes.**
 - **Font Optimization:** Always use Next.js's optimized `next/font` loader inside `layout.tsx` to pre-load fonts and expose them as CSS variables. DO NOT load fonts via CSS `@import` statements (e.g., `@import 'geist/font/...'`), as they block rendering and trigger sequential chained requests, degrading Largest Contentful Paint (LCP) scores.
 
 ## Git & Version Control
 
 - **No Hook Bypassing:** STRICTLY PROHIBITED to use `--no-verify` when committing or pushing. If a pre-commit hook (like husky or lint-staged) fails, you MUST fix the underlying linting or formatting issue before attempting to commit again.
-- **Lint & Type Safety First:** Before committing or pushing to GitHub, you MUST properly fix all type check and lint errors (e.g., using proper interfaces or explicitly typed objects instead of `any`, `// eslint-disable-next-line` where strictly necessary, and renaming unused variables with an underscore `_name`). Do not just ignore them.
+- **Lint & Type Safety First:** Before committing or pushing to GitHub, you MUST properly fix all type check and lint errors (e.g., using proper interfaces or explicitly typed objects instead of `any`, and renaming unused variables with an underscore `_name`).
+- **CRITICAL LINTING INVARIANT**: NEVER use `// eslint-disable-next-line` to bypass or silence architectural linting rules, especially React Hook lifecycle warnings (e.g., `set-state-in-effect`, `exhaustive-deps`). You MUST refactor the code to solve the underlying state or lifecycle flaw (e.g., using derived state during render instead of cascading effects). Do not just ignore or silence errors.
 
 ## AI Model & Quota Management
 

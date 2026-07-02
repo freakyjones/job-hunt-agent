@@ -8,8 +8,14 @@ import * as crypto from 'crypto';
  */
 export class DBStateManager {
   private supabase: SupabaseClient;
+  private userId: string;
 
-  constructor() {
+  constructor(userId: string) {
+    if (!userId) {
+      throw new Error('userId is required for DBStateManager to ensure tenant isolation.');
+    }
+    this.userId = userId;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -44,11 +50,12 @@ export class DBStateManager {
       url: job.url || '',
       description: job.description || null,
       status: job.status,
+      user_id: this.userId,
     }));
 
     const { error } = await this.supabase
       .from('jobs')
-      .upsert(payload, { onConflict: 'url', ignoreDuplicates: true });
+      .upsert(payload, { onConflict: 'user_id,url', ignoreDuplicates: true });
 
     if (error) {
       throw new Error('Failed to batch insert jobs: ' + error.message);
@@ -68,7 +75,11 @@ export class DBStateManager {
     if (score !== undefined) payload.score = score;
     if (reasoning !== undefined) payload.reasoning = reasoning;
 
-    const { error } = await this.supabase.from('jobs').update(payload).eq('id', jobId);
+    const { error } = await this.supabase
+      .from('jobs')
+      .update(payload)
+      .eq('id', jobId)
+      .eq('user_id', this.userId);
 
     if (error) {
       console.error(`Failed to update job ${jobId}:`, error.message);
@@ -81,12 +92,50 @@ export class DBStateManager {
    * Returns all jobs with a specific status.
    */
   async getJobsByStatus(status: JobStatus): Promise<Job[]> {
-    const { data, error } = await this.supabase.from('jobs').select('*').eq('status', status);
+    const { data, error } = await this.supabase
+      .from('jobs')
+      .select('*')
+      .eq('status', status)
+      .eq('user_id', this.userId);
 
     if (error) {
       throw new Error('Failed to fetch jobs: ' + error.message);
     }
 
     return data as Job[];
+  }
+
+  /**
+   * Fetches the extracted text and target roles of the master resume from Supabase.
+   */
+  async getMasterResumeData(): Promise<{ content: string | null; targetRoles: string[] }> {
+    const { data, error } = await this.supabase
+      .from('base_resumes')
+      .select('extracted_content, target_roles')
+      .eq('user_id', this.userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) {
+      logger.error('Failed to fetch master resume data from DB:', error?.message);
+      return { content: null, targetRoles: [] };
+    }
+
+    // Parse JSONB target_roles if it exists
+    let roles: string[] = [];
+    if (Array.isArray(data.target_roles)) {
+      roles = data.target_roles;
+    }
+
+    return { content: data.extracted_content, targetRoles: roles };
+  }
+
+  /**
+   * Fetches the extracted text of the master resume from Supabase.
+   */
+  async getMasterResumeText(): Promise<string | null> {
+    const data = await this.getMasterResumeData();
+    return data.content;
   }
 }

@@ -35,7 +35,7 @@ export async function getBaseResume(): Promise<{ data: BaseResume | null; error:
 
 export async function uploadBaseResume(
   formData: FormData
-): Promise<{ data: BaseResume | null; error: string | null }> {
+): Promise<{ data: BaseResume | null; contentChanged?: boolean; error: string | null }> {
   try {
     const supabase = await createClient();
     const {
@@ -97,6 +97,15 @@ export async function uploadBaseResume(
       return { data: null, error: `Storage error: ${storageError.message}` };
     }
 
+    // Check if content actually changed to inform frontend
+    const { data: oldRecord } = await supabase
+      .from('base_resumes')
+      .select('extracted_content')
+      .eq('user_id', user.id)
+      .single();
+
+    const contentChanged = !oldRecord || oldRecord.extracted_content !== extractedContent;
+
     // Upsert database record
     const { data: record, error: dbError } = await supabase
       .from('base_resumes')
@@ -115,8 +124,34 @@ export async function uploadBaseResume(
       return { data: null, error: `Database error: ${dbError.message}` };
     }
 
-    return { data: record, error: null };
+    return { data: record, contentChanged, error: null };
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Unknown error' };
+  }
+}
+
+export async function updateTargetRoles(roles: string[]): Promise<{ error: string | null }> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: 'Not authenticated' };
+    }
+
+    const { error: dbError } = await supabase
+      .from('base_resumes')
+      .update({ target_roles: roles })
+      .eq('user_id', user.id);
+
+    if (dbError) {
+      return { error: `Database error: ${dbError.message}` };
+    }
+
+    return { error: null };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Unknown error' };
   }
 }

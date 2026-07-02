@@ -27,21 +27,35 @@ waiting for navigation to "**/jobs" until "load"
 
 ```yaml
 - generic [active] [ref=e1]:
-    - generic [ref=e3]:
-        - heading "Job Hunt Agent" [level=1] [ref=e4]
-        - generic [ref=e5]:
-            - alert [ref=e6]: Email address "test-1782678246440@example.com" is invalid
-            - generic [ref=e7]:
-                - generic [ref=e8]: Email
-                - textbox "Email" [ref=e9]:
-                    - /placeholder: you@example.com
-            - generic [ref=e10]:
-                - generic [ref=e11]: Password
-                - textbox "Password" [ref=e12]
-            - generic [ref=e13]:
-                - button "Log in" [ref=e14] [cursor=pointer]
-                - button "Sign up" [ref=e15] [cursor=pointer]
-    - alert [ref=e16]
+    - main [ref=e2]:
+        - generic [ref=e4]:
+            - generic [ref=e5]:
+                - img [ref=e6]
+                - heading "Job Hunt Agent" [level=1] [ref=e10]
+            - paragraph [ref=e11]: Autonomous intelligence platform for discovering, evaluating, and applying to high-performance roles.
+            - img [ref=e14]:
+                - generic [ref=e70]: 'SYS_STATUS: ONLINE'
+                - generic [ref=e71]:
+                    - generic [ref=e73]: SEARCHING ROLES...
+                    - generic [ref=e74]: SCORING MATCHES...
+                    - generic [ref=e75]: TAILORING RESUMES...
+                    - generic [ref=e76]: APPLYING TO JOBS...
+        - generic [ref=e79]:
+            - generic [ref=e80]:
+                - alert [ref=e81]: Email address "test-1782989128061@example.com" is invalid
+                - generic [ref=e82]:
+                    - generic [ref=e83]: Email
+                    - textbox "Email" [ref=e84]:
+                        - /placeholder: you@example.com
+                - generic [ref=e85]:
+                    - generic [ref=e86]: Password
+                    - textbox "Password" [ref=e87]
+                - generic [ref=e88]:
+                    - button "Log in" [ref=e89] [cursor=pointer]
+                    - button "Sign up" [ref=e90] [cursor=pointer]
+            - generic [ref=e93]: OR
+            - button "Try it out anonymously" [ref=e96] [cursor=pointer]
+    - alert [ref=e97]
 ```
 
 # Test source

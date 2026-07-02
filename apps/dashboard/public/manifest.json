@@ -1,0 +1,16 @@
+{
+  "name": "Job Hunt Agent",
+  "short_name": "Job Agent",
+  "description": "Zero-Cost Autonomous Job Search",
+  "start_url": "/login",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#8b5cf6",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

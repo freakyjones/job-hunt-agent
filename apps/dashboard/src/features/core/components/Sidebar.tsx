@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './Sidebar.module.css';
+import { Logo } from './Logo';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -11,7 +12,7 @@ export function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.brand}>
-        <div className={styles.brandIcon}></div>
+        <Logo size={24} />
         Agentic Job Hunt
       </div>
       <nav className={styles.nav}>

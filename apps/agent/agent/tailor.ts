@@ -17,6 +17,31 @@ const fonts = {
   },
 };
 
+function cleanAndParseJSON(text: string) {
+  let cleaned = text.trim();
+
+  // Remove markdown code blocks if present
+  const markdownRegex = /^```(?:json)?\s*([\s\S]*?)\s*```$/i;
+  const match = cleaned.match(markdownRegex);
+  if (match) {
+    cleaned = match[1].trim();
+  }
+
+  try {
+    return JSON.parse(cleaned);
+  } catch (firstError) {
+    // Attempt to fix common LLM JSON syntax errors, specifically unescaped newlines inside strings
+    try {
+      const fixedNewlines = cleaned.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/g, (_, p1) => {
+        return '"' + p1.replace(/\n/g, '\\n').replace(/\r/g, '\\r') + '"';
+      });
+      return JSON.parse(fixedNewlines);
+    } catch (secondError) {
+      throw firstError;
+    }
+  }
+}
+
 export class TailoringAgent {
   private ai: GoogleGenAI;
   private modelName: string;
@@ -127,7 +152,7 @@ RULES:
       throw new Error('TailoringAgent returned empty response.');
     }
 
-    const data = JSON.parse(jsonText);
+    const data = cleanAndParseJSON(jsonText);
 
     // Map experience array to pdfmake blocks safely
     const experienceBlocks: Record<string, unknown>[] = [];

@@ -73,7 +73,15 @@ async function runScrape(db: DBStateManager) {
   const allJobs: any[] = [];
   const boardJobs: any[] = [];
   const atsJobs: any[] = [];
-  const keywords = ['Frontend Developer', 'Fullstack Developer', 'MERN Developer'];
+
+  const resumeData = await db.getMasterResumeData();
+  let keywords =
+    resumeData.targetRoles && resumeData.targetRoles.length > 0
+      ? resumeData.targetRoles
+      : ['Software Engineer', 'Fullstack Developer', 'Frontend Developer']; // Fallback
+
+  console.log(`Using target scraping roles: ${keywords.join(', ')}`);
+
   const locations = ['India', 'Remote'];
 
   console.log('Scraping Naukri...');
@@ -190,10 +198,12 @@ async function runEvaluate(db: DBStateManager) {
   }
 
   const agent = createAgent();
-  const rootResumePath = path.join(__dirname, '../../../resume.txt');
-  const localResumePath = './resume.txt';
-  const resumePath = fs.existsSync(rootResumePath) ? rootResumePath : localResumePath;
-  const masterResume = fs.readFileSync(resumePath, 'utf8');
+  const masterResume = await db.getMasterResumeText();
+
+  if (!masterResume) {
+    console.error('No master resume found in Supabase (base_resumes). Skipping evaluation.');
+    return;
+  }
 
   let evaluatedCount = 0;
   let errorCount = 0;
@@ -275,12 +285,7 @@ async function runApply(db: DBStateManager) {
 
   console.log(`Found ${acceptedJobs.length} jobs in the ACCEPTED queue.`);
 
-  const rootResumePath = path.join(__dirname, '../../../resume.txt');
-  const localResumePath = './resume.txt';
-  const masterResumePath = fs.existsSync(rootResumePath) ? rootResumePath : localResumePath;
-  const masterResume = fs.existsSync(masterResumePath)
-    ? fs.readFileSync(masterResumePath, 'utf8')
-    : '';
+  const masterResume = (await db.getMasterResumeText()) || '';
 
   await autoApplier.init();
 
@@ -338,7 +343,11 @@ async function main() {
   logger.info(`Starting Zero-Cost Job Hunt Agent - Mode: ${command}`);
 
   // Initialize Database State Manager (Supabase)
-  const db = new DBStateManager();
+  const targetUserId = process.env.TARGET_USER_ID;
+  if (!targetUserId) {
+    throw new Error('TARGET_USER_ID is missing. Cannot proceed with multi-tenant workflow.');
+  }
+  const db = new DBStateManager(targetUserId);
   await db.init();
 
   if (command === 'scrape') {

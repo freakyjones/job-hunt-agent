@@ -7,6 +7,7 @@ import { ClientProviders } from '@/components/ClientProviders';
 export const metadata: Metadata = {
   title: 'Agentic Job Hunt Dashboard',
   description: 'A secure dashboard for your Zero-Cost Job Hunt Agent',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({

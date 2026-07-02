@@ -64,8 +64,14 @@ export async function scrapeNaukri(
 
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-        // Wait for job cards to render
-        await page.waitForSelector('.srp-jobtuple, article.jobTuple', { timeout: 30000 });
+        // Wait for job cards to render (catch to allow API interception fallback)
+        let domTimeoutError: Error | null = null;
+        try {
+          await page.waitForSelector('.srp-jobtuple, article.jobTuple', { timeout: 30000 });
+        } catch (e) {
+          domTimeoutError = e instanceof Error ? e : new Error(String(e));
+          console.warn('DOM wait for Naukri timed out. Checking if API intercepted anything...');
+        }
 
         // Wait a bit for requests to settle
         await page.waitForTimeout(3000);
@@ -76,6 +82,9 @@ export async function scrapeNaukri(
           return jobs;
         }
 
+        if (domTimeoutError) {
+          throw domTimeoutError; // Throw if both DOM and API failed
+        }
         console.log('No API jobs intercepted. Falling back to DOM parsing...');
         const cards = await page.locator('.srp-jobtuple, article.jobTuple').all();
         console.log(`Found ${cards.length} Naukri job cards.`);

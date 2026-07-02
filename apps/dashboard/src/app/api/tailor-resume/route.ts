@@ -30,7 +30,7 @@ function cleanAndParseJSON(text: string) {
         return '"' + p1.replace(/\n/g, '\\n').replace(/\r/g, '\\r') + '"';
       });
       return JSON.parse(fixedNewlines);
-    } catch (secondError) {
+    } catch (_secondError) {
       throw firstError;
     }
   }

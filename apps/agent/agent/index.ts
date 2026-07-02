@@ -94,15 +94,40 @@ export class JobHuntAgent {
       throw new Error('LLM failed to return text.');
     }
 
-    try {
-      // Robust JSON extraction
-      let rawText = response.text.trim();
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        rawText = jsonMatch[0];
+    function cleanAndParseJSON(text: string) {
+      let cleaned = text.trim();
+
+      // Remove markdown code blocks if present
+      const markdownRegex = /^```(?:json)?\s*([\s\S]*?)\s*```$/i;
+      const match = cleaned.match(markdownRegex);
+      if (match) {
+        cleaned = match[1].trim();
+      } else {
+        // Fallback: extract JSON object if wrapped in other text
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          cleaned = jsonMatch[0];
+        }
       }
 
-      const parsedObj = JSON.parse(rawText);
+      try {
+        return JSON.parse(cleaned);
+      } catch (firstError) {
+        // Attempt to fix common LLM JSON syntax errors, specifically unescaped newlines inside strings
+        try {
+          const fixedNewlines = cleaned.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/g, (_, p1) => {
+            return '"' + p1.replace(/\n/g, '\\n').replace(/\r/g, '\\r') + '"';
+          });
+          return JSON.parse(fixedNewlines);
+        } catch (secondError) {
+          throw firstError;
+        }
+      }
+    }
+
+    try {
+      // Robust JSON extraction using the shared utility pattern
+      const parsedObj = cleanAndParseJSON(response.text);
       const result = EvaluationResultSchema.parse(parsedObj);
       return result;
     } catch (error) {

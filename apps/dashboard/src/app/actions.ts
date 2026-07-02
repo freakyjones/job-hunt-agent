@@ -61,8 +61,12 @@ export async function updateJobStatusAction(id: string, newStatusStr: string) {
 
 export async function triggerGitHubAction(command: string = 'all') {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     await verifyAuth();
-    await triggerScraperWorkflow(command);
+    await triggerScraperWorkflow(command, user?.id, user?.email);
     return { success: true };
   } catch (e: unknown) {
     if (e instanceof Error) {
