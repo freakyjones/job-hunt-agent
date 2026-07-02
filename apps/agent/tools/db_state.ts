@@ -89,4 +89,22 @@ export class DBStateManager {
 
     return data as Job[];
   }
+
+  /**
+   * Fetches the extracted text of the master resume from Supabase.
+   */
+  async getMasterResumeText(): Promise<string | null> {
+    const { data, error } = await this.supabase
+      .from('base_resumes')
+      .select('extracted_content')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) {
+      logger.error('Failed to fetch master resume from DB:', error?.message);
+      return null;
+    }
+    return data.extracted_content;
+  }
 }

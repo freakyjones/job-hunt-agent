@@ -190,10 +190,12 @@ async function runEvaluate(db: DBStateManager) {
   }
 
   const agent = createAgent();
-  const rootResumePath = path.join(__dirname, '../../../resume.txt');
-  const localResumePath = './resume.txt';
-  const resumePath = fs.existsSync(rootResumePath) ? rootResumePath : localResumePath;
-  const masterResume = fs.readFileSync(resumePath, 'utf8');
+  const masterResume = await db.getMasterResumeText();
+
+  if (!masterResume) {
+    console.error('No master resume found in Supabase (base_resumes). Skipping evaluation.');
+    return;
+  }
 
   let evaluatedCount = 0;
   let errorCount = 0;
@@ -275,12 +277,7 @@ async function runApply(db: DBStateManager) {
 
   console.log(`Found ${acceptedJobs.length} jobs in the ACCEPTED queue.`);
 
-  const rootResumePath = path.join(__dirname, '../../../resume.txt');
-  const localResumePath = './resume.txt';
-  const masterResumePath = fs.existsSync(rootResumePath) ? rootResumePath : localResumePath;
-  const masterResume = fs.existsSync(masterResumePath)
-    ? fs.readFileSync(masterResumePath, 'utf8')
-    : '';
+  const masterResume = (await db.getMasterResumeText()) || '';
 
   await autoApplier.init();
 
