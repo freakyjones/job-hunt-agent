@@ -21,7 +21,7 @@ export async function triggerScraperWorkflow(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        ref: 'feat/multi-tenant-scraper-fix',
+        ref: 'main',
         inputs: { command, user_id: userId, user_email: userEmail },
       }),
     }
