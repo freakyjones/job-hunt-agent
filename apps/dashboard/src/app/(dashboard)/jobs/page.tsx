@@ -1,8 +1,8 @@
 import { JobsClient } from '@/features/jobs/components/JobsClient';
 import { getJobs, getRecentWorkflows } from '@/features/jobs/services/jobs';
-
 import { redirect } from 'next/navigation';
 import { getBaseResume } from '@/features/profile/services/profile';
+import { createClient } from '@/utils/supabase/server';
 
 export default async function JobsPage() {
   const jobsResultPromise = getJobs();
@@ -20,6 +20,12 @@ export default async function JobsPage() {
   }
 
   const masterResumeContent = resumeResult.data.extracted_content;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isAnonymous = user?.is_anonymous ?? false;
 
   return (
     <>
@@ -42,6 +48,7 @@ export default async function JobsPage() {
         initialJobs={jobsResult.data || []}
         masterResume={masterResumeContent}
         initialWorkflows={workflowsResult.data || []}
+        isAnonymous={isAnonymous}
       />
     </>
   );

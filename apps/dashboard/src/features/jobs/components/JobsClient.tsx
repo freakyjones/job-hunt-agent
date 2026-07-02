@@ -20,10 +20,12 @@ export function JobsClient({
   initialJobs,
   masterResume,
   initialWorkflows = [],
+  isAnonymous = false,
 }: {
   initialJobs: Job[];
   masterResume: string;
   initialWorkflows?: WorkflowRun[];
+  isAnonymous?: boolean;
 }) {
   const [optimisticJobs, addOptimisticJob] = useOptimistic(
     initialJobs,
@@ -189,7 +191,34 @@ export function JobsClient({
 
       {displayJobs.length === 0 && (
         <div className={styles.emptyState}>
+          <div className="abstract-shape-container">
+            <div className="abstract-shape"></div>
+          </div>
           <h2>No jobs here yet.</h2>
+          {isAnonymous && (
+            <p
+              style={{
+                marginTop: '16px',
+                color: 'var(--text-muted)',
+                maxWidth: '600px',
+                lineHeight: '1.6',
+                fontSize: '0.95rem',
+              }}
+            >
+              Welcome to the anonymous sandbox! To test the platform:
+              <br />
+              1. Click <strong>Scrape</strong> in the Dev Tools panel above to search and find new
+              jobs.
+              <br />
+              2. Wait a few moments (or check the logs) to see jobs loaded into your Inbox.
+              <br />
+              3. Open a job card and click <strong>Save</strong> or <strong>Reject</strong> to
+              interact with the UI.
+              <br />
+              4. Trigger <strong>Evaluate</strong> or <strong>Apply</strong> to test the AI
+              tailoring and automated application flows!
+            </p>
+          )}
         </div>
       )}
 

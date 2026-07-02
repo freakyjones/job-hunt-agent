@@ -335,7 +335,11 @@ async function main() {
   logger.info(`Starting Zero-Cost Job Hunt Agent - Mode: ${command}`);
 
   // Initialize Database State Manager (Supabase)
-  const db = new DBStateManager();
+  const targetUserId = process.env.TARGET_USER_ID;
+  if (!targetUserId) {
+    throw new Error('TARGET_USER_ID is missing. Cannot proceed with multi-tenant workflow.');
+  }
+  const db = new DBStateManager(targetUserId);
   await db.init();
 
   if (command === 'scrape') {
