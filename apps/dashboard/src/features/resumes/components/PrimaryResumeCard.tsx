@@ -42,6 +42,14 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
     // Ignore and fallback to raw text
   }
 
+  // Sync target roles from props to state (fixes race condition where Edge function finishes before Realtime connects)
+  useEffect(() => {
+    setTargetRoles(resume.target_roles || []);
+    if (resume.target_roles && resume.target_roles.length > 0) {
+      setIsAiProcessing(false);
+    }
+  }, [resume.target_roles]);
+
   // Subscribe to realtime updates for target_roles from the Edge Function
   useEffect(() => {
     if (!resume.id) return;
@@ -96,11 +104,16 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
       formData.append('file', file);
 
       try {
-        const { error: uploadError } = await uploadBaseResume(formData);
-        if (uploadError) {
-          setError(uploadError);
+        const uploadResponse = await uploadBaseResume(formData);
+        if (uploadResponse.error) {
+          setError(uploadResponse.error);
         } else {
-          setIsAiProcessing(true);
+          if (uploadResponse.contentChanged === false) {
+            toast.success('Resume replaced (Content is identical).', { icon: '📄' });
+            setIsAiProcessing(false);
+          } else {
+            setIsAiProcessing(true);
+          }
           router.refresh();
         }
       } catch (err) {
