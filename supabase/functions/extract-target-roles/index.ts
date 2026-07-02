@@ -12,6 +12,18 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // Secure the webhook using the secret header
+  const secret = req.headers.get('x-webhook-secret');
+  if (
+    secret !== 'job-hunt-agent-webhook-secret-2026' &&
+    secret !== Deno.env.get('WEBHOOK_SECRET')
+  ) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 401,
+    });
+  }
+
   try {
     const payload = await req.json();
 
