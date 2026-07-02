@@ -57,18 +57,22 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
           filter: `id=eq.${resume.id}`,
         },
         (payload) => {
-          if (payload.new && payload.new.target_roles) {
-            setTargetRoles(payload.new.target_roles);
+          if (payload.new && payload.new.target_roles !== undefined) {
+            setTargetRoles(payload.new.target_roles || []);
             setIsAiProcessing(false);
 
             if (!isUserEdit.current) {
-              toast.success(
-                'AI has finished analyzing your resume and updated your target roles!',
-                {
-                  icon: '🤖',
-                  duration: 5000,
-                }
-              );
+              if (!payload.new.target_roles || payload.new.target_roles.length === 0) {
+                toast.error('AI could not determine target roles. Please add them manually.');
+              } else {
+                toast.success(
+                  'AI has finished analyzing your resume and updated your target roles!',
+                  {
+                    icon: '🤖',
+                    duration: 5000,
+                  }
+                );
+              }
             } else {
               isUserEdit.current = false;
             }
@@ -251,7 +255,7 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
             />
           )}
 
-          {targetRoles.length === 0 && !isEditingRoles && (
+          {targetRoles.length === 0 && !isEditingRoles && !isAiProcessing && (
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
               No target roles defined. Agents will use default roles.
             </span>
