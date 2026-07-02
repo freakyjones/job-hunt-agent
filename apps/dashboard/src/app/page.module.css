@@ -347,7 +347,7 @@
     hsla(190, 100%, 55%, 0.1) 40%,
     transparent 70%
   );
-  transform: translate(-50%, -50%);
+  transform: translate(-80%, -50%) scale(1);
   filter: blur(60px);
   z-index: 0;
   animation: aurora-shift 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
@@ -429,6 +429,13 @@
   justify-content: center;
   align-items: center;
   flex-grow: 1;
+  min-height: 280px;
+}
+
+@media (min-width: 769px) {
+  .heroVisualContainer {
+    min-height: 400px;
+  }
 }
 
 .loginFormWrapper {

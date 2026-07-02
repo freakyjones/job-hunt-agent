@@ -55,7 +55,9 @@ body::before {
   pointer-events: none;
   z-index: 50;
   opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  /* Replaced expensive SVG feTurbulence with lightweight base64 PNG noise */
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAGFBMVEUAAAAAAP8AAAAAAAABAQEAAAAAAAABAQG/n/LCAAAACHRSTlMAAAAAAABhGj998/wAAAB8SURBVDjLxY3BEQAhCAOCP8AA3n+5N5fBwMAcT4ZtO12Z6T9fPz+Ttz7s/V68L5vX/Xz7vn79/H1//f1+/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f/8AzV4H/342k+kAAAAASUVORK5CYII=');
+  background-repeat: repeat;
 }
 
 * {
