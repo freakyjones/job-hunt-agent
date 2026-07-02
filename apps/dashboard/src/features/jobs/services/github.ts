@@ -6,6 +6,7 @@ export async function triggerScraperWorkflow(
   const githubToken = process.env.GITHUB_PAT;
   const owner = process.env.GITHUB_OWNER || 'freakyjones';
   const repo = process.env.GITHUB_REPO || 'job-hunt-agent';
+  const branch = process.env.GITHUB_BRANCH || 'main';
 
   if (!githubToken) {
     throw new Error('Missing GITHUB_PAT env variable');
@@ -21,7 +22,7 @@ export async function triggerScraperWorkflow(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        ref: 'main',
+        ref: branch,
         inputs: { command, user_id: userId, user_email: userEmail },
       }),
     }
