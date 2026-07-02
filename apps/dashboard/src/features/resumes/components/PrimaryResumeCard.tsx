@@ -42,13 +42,17 @@ export function PrimaryResumeCard({ resume, onDownload, onView }: PrimaryResumeC
     // Ignore and fallback to raw text
   }
 
+  const [prevTargetRolesProp, setPrevTargetRolesProp] = useState(resume.target_roles);
+
   // Sync target roles from props to state (fixes race condition where Edge function finishes before Realtime connects)
-  useEffect(() => {
+  // We use the "derived state during render" pattern to avoid useEffect cascading renders.
+  if (resume.target_roles !== prevTargetRolesProp) {
+    setPrevTargetRolesProp(resume.target_roles);
     setTargetRoles(resume.target_roles || []);
     if (resume.target_roles && resume.target_roles.length > 0) {
       setIsAiProcessing(false);
     }
-  }, [resume.target_roles]);
+  }
 
   // Subscribe to realtime updates for target_roles from the Edge Function
   useEffect(() => {
