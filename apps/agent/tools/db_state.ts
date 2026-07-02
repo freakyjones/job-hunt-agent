@@ -55,7 +55,7 @@ export class DBStateManager {
 
     const { error } = await this.supabase
       .from('jobs')
-      .upsert(payload, { onConflict: 'url', ignoreDuplicates: true });
+      .upsert(payload, { onConflict: 'user_id,url', ignoreDuplicates: true });
 
     if (error) {
       throw new Error('Failed to batch insert jobs: ' + error.message);

@@ -45,7 +45,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          EMAIL_TO: ${{ github.event.inputs.user_email || secrets.EMAIL_TO }}
+          EMAIL_TO: ${{ github.event_name == 'schedule' && secrets.EMAIL_TO || github.event.inputs.user_email }}
           TARGET_USER_ID: ${{ github.event.inputs.user_id || secrets.ADMIN_USER_ID }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -59,7 +59,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          EMAIL_TO: ${{ github.event.inputs.user_email || secrets.EMAIL_TO }}
+          EMAIL_TO: ${{ github.event_name == 'schedule' && secrets.EMAIL_TO || github.event.inputs.user_email }}
           TARGET_USER_ID: ${{ github.event.inputs.user_id || secrets.ADMIN_USER_ID }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -72,7 +72,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          EMAIL_TO: ${{ github.event.inputs.user_email || secrets.EMAIL_TO }}
+          EMAIL_TO: ${{ github.event_name == 'schedule' && secrets.EMAIL_TO || github.event.inputs.user_email }}
           TARGET_USER_ID: ${{ github.event.inputs.user_id || secrets.ADMIN_USER_ID }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

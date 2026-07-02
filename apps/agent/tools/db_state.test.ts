@@ -42,7 +42,7 @@ describe('DBStateManager', () => {
     expect(createClient).toHaveBeenCalledWith('http://localhost:54321', 'test_key');
   });
 
-  it('addPendingJobs should use upsert with onConflict url and ignoreDuplicates true', async () => {
+  it('addPendingJobs should use upsert with onConflict user_id,url and ignoreDuplicates true', async () => {
     process.env.SUPABASE_URL = 'http://localhost';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'test';
 
@@ -62,7 +62,7 @@ describe('DBStateManager', () => {
     expect(mockFrom).toHaveBeenCalledWith('jobs');
     expect(mockUpsert).toHaveBeenCalledWith(
       expect.arrayContaining([expect.objectContaining({ company: 'Google', url: 'https://g.co' })]),
-      { onConflict: 'url', ignoreDuplicates: true }
+      { onConflict: 'user_id,url', ignoreDuplicates: true }
     );
   });
 
