@@ -339,8 +339,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 150vw;
-  height: 150vh;
+  width: 150%;
+  height: 150%;
   background: radial-gradient(
     circle at center,
     hsla(270, 100%, 65%, 0.15) 0%,

@@ -42,8 +42,7 @@ export function LoginForm() {
         <button
           type="submit"
           formAction={loginAction}
-          className="button button-primary"
-          style={{ width: '100%', padding: '12px' }}
+          className={`button button-primary ${styles.fullWidthButton}`}
           disabled={isLoginPending || isSignupPending}
         >
           {isLoginPending ? 'Logging in...' : 'Log in'}
@@ -51,8 +50,7 @@ export function LoginForm() {
         <button
           type="submit"
           formAction={signupAction}
-          className="button button-secondary"
-          style={{ width: '100%', padding: '12px' }}
+          className={`button button-secondary ${styles.fullWidthButton}`}
           disabled={isLoginPending || isSignupPending}
         >
           {isSignupPending ? 'Signing up...' : 'Sign up'}

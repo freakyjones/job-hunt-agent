@@ -128,11 +128,12 @@
 }
 
 @keyframes flow {
-  from {
-    stroke-dashoffset: 150;
+  0%,
+  100% {
+    opacity: 0.1;
   }
-  to {
-    stroke-dashoffset: 0;
+  50% {
+    opacity: 1;
   }
 }
 

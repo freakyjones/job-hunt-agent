@@ -152,7 +152,6 @@ body::before {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   background-size: 200% 200%;
-  animation: gradient-shimmer 4s ease infinite;
 }
 
 @keyframes gradient-shimmer {
