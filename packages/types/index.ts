@@ -59,3 +59,46 @@ export const BaseResumeSchema = z.object({
 });
 
 export type BaseResume = z.infer<typeof BaseResumeSchema>;
+
+export const TargetCompanySchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  company_name: z.string(),
+  rss_feed_url: z.string().url(),
+  created_at: z.string().optional(),
+});
+
+export type TargetCompany = z.infer<typeof TargetCompanySchema>;
+
+export const CompanySignalSchema = z.object({
+  id: z.string().uuid(),
+  company_id: z.string().uuid(),
+  source_url: z.string().url(),
+  title: z.string(),
+  content_summary: z.string().nullable().optional(),
+  published_at: z.string().nullable().optional(),
+  created_at: z.string().optional(),
+});
+
+export type CompanySignal = z.infer<typeof CompanySignalSchema>;
+
+export enum NetworkingLeadStatus {
+  PENDING = 'PENDING',
+  REVIEWED = 'REVIEWED',
+  SENT = 'SENT',
+}
+
+export const NetworkingLeadStatusEnum = z.nativeEnum(NetworkingLeadStatus);
+
+export const NetworkingLeadSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  signal_id: z.string().uuid(),
+  contact_name: z.string(),
+  contact_role: z.string().nullable().optional(),
+  draft_message: z.string(),
+  status: NetworkingLeadStatusEnum,
+  created_at: z.string().optional(),
+});
+
+export type NetworkingLead = z.infer<typeof NetworkingLeadSchema>;

@@ -1,0 +1,32 @@
+{
+  "name": "@job-hunt/networking-worker",
+  "version": "1.0.0",
+  "description": "Networking agent worker",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint"
+  },
+  "type": "commonjs",
+  "devDependencies": {
+    "@job-hunt/eslint-config": "workspace:*",
+    "@job-hunt/typescript-config": "workspace:*",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@google/genai": "^2.8.0",
+    "@job-hunt/logger": "workspace:^",
+    "@job-hunt/types": "workspace:*",
+    "@langchain/community": "^0.2.20",
+    "@langchain/core": "^0.2.18",
+    "@langchain/google-genai": "^0.0.22",
+    "@langchain/langgraph": "^0.0.30",
+    "@supabase/supabase-js": "^2.108.2",
+    "dotenv": "^17.4.2",
+    "rss-parser": "^3.13.0",
+    "zod": "^3.23.0"
+  }
+}

@@ -58,6 +58,18 @@ export const JobCard = React.memo(function JobCard({
           View Job
         </a>
 
+        {isHighMatch && (
+          <button
+            className="button button-secondary"
+            onClick={() => {
+              // TODO: Trigger server action to queue networking agent
+              alert(`Queueing warm lead scout for ${job.company}`);
+            }}
+          >
+            Scout Warm Leads
+          </button>
+        )}
+
         {(job.status === JobStatus.PENDING ||
           job.status === JobStatus.EVALUATED ||
           job.status === JobStatus.ERROR) && (
