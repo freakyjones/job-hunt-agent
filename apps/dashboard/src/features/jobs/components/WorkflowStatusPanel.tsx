@@ -8,12 +8,7 @@ import styles from './WorkflowStatusPanel.module.css';
 export function WorkflowStatusPanel({ initialWorkflows }: { initialWorkflows: WorkflowRun[] }) {
   const [workflows, setWorkflows] = useState<WorkflowRun[]>(initialWorkflows);
   const [dismissedRunIds, setDismissedRunIds] = useState<number[]>([]);
-  const [mounted, setMounted] = useState(false);
   const supabase = useMemo(() => createClient(), []);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     const channel = supabase
@@ -84,14 +79,12 @@ export function WorkflowStatusPanel({ initialWorkflows }: { initialWorkflows: Wo
           <div key={w.id || w.run_id} className={styles.workflowItem}>
             <div className={styles.workflowInfo}>
               <span className={styles.workflowName}>{w.workflow_name || 'Job Hunt Agent'}</span>
-              <span className={styles.workflowMeta}>
+              <span className={styles.workflowMeta} suppressHydrationWarning>
                 Run ID: {w.run_id} | Updated:{' '}
-                {mounted
-                  ? new Date(w.updated_at).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
-                  : '...'}
+                {new Date(w.updated_at).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
               </span>
             </div>
             <div className={styles.statusWrapper}>
