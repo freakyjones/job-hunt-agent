@@ -8,7 +8,12 @@ import styles from './WorkflowStatusPanel.module.css';
 export function WorkflowStatusPanel({ initialWorkflows }: { initialWorkflows: WorkflowRun[] }) {
   const [workflows, setWorkflows] = useState<WorkflowRun[]>(initialWorkflows);
   const [dismissedRunIds, setDismissedRunIds] = useState<number[]>([]);
+  const [mounted, setMounted] = useState(false);
   const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const channel = supabase
@@ -81,10 +86,12 @@ export function WorkflowStatusPanel({ initialWorkflows }: { initialWorkflows: Wo
               <span className={styles.workflowName}>{w.workflow_name || 'Job Hunt Agent'}</span>
               <span className={styles.workflowMeta}>
                 Run ID: {w.run_id} | Updated:{' '}
-                {new Date(w.updated_at).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                {mounted
+                  ? new Date(w.updated_at).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : '...'}
               </span>
             </div>
             <div className={styles.statusWrapper}>
