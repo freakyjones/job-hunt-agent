@@ -8,6 +8,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const isJobs = pathname ? pathname.startsWith('/jobs') : true;
   const isResumes = pathname ? pathname.startsWith('/resumes') : false;
+  const isNetwork = pathname ? pathname.startsWith('/network') : false;
 
   return (
     <aside className={styles.sidebar}>
@@ -16,7 +17,10 @@ export function Sidebar() {
         Agentic Job Hunt
       </div>
       <nav className={styles.nav}>
-        <Link href="/jobs" className={`${styles.navLink} ${isJobs ? styles.navLinkActive : ''}`}>
+        <Link
+          href="/jobs"
+          className={`${styles.navLink} ${isJobs && !isResumes && !isNetwork ? styles.navLinkActive : ''}`}
+        >
           💼 Jobs
         </Link>
         <Link
@@ -24,6 +28,12 @@ export function Sidebar() {
           className={`${styles.navLink} ${isResumes ? styles.navLinkActive : ''}`}
         >
           📄 Resumes
+        </Link>
+        <Link
+          href="/network"
+          className={`${styles.navLink} ${isNetwork ? styles.navLinkActive : ''}`}
+        >
+          🤝 Network
         </Link>
       </nav>
     </aside>

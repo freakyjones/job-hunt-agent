@@ -4,12 +4,13 @@ import { useState, useOptimistic, useTransition, useMemo, useCallback } from 're
 import dynamic from 'next/dynamic';
 import styles from '@/app/page.module.css';
 import toast from 'react-hot-toast';
-import { updateJobStatusAction, triggerGitHubAction } from '@/app/actions';
+import { updateJobStatusAction } from '@/app/actions';
 import { Job, JobStatus } from '@job-hunt/types';
 import { DashboardTabs, TabName } from './DashboardTabs';
 import { JobCard } from './JobCard';
 import { WorkflowStatusPanel } from './WorkflowStatusPanel';
 import { WorkflowRun } from '../services/jobs';
+import { DevToolsPanel } from './DevToolsPanel';
 
 const RealtimeJobListener = dynamic(
   () => import('./RealtimeJobListener').then((mod) => mod.RealtimeJobListener),
@@ -35,25 +36,7 @@ export function JobsClient({
   );
   const [, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<TabName>('inbox');
-  const [isTriggering, setIsTriggering] = useState(false);
 
-  const handleTrigger = async (command: string) => {
-    setIsTriggering(true);
-    const loadingToast = toast.loading(`Waking up the agent for ${command}...`);
-    try {
-      const res = await triggerGitHubAction(command);
-      if (res.success) {
-        toast.success(`Agent ${command} triggered!`, { id: loadingToast });
-      } else {
-        toast.error(`Failed to trigger: ${res.error}`, { id: loadingToast });
-      }
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? `Error: ${e.message}` : 'An unexpected error occurred', {
-        id: loadingToast,
-      });
-    }
-    setIsTriggering(false);
-  };
   const handleUpdateStatus = useCallback(
     async (id: string, newStatus: JobStatus, oldStatus: JobStatus) => {
       // Optimistic UI Update - Instant Removal/Move
@@ -140,14 +123,7 @@ export function JobsClient({
     <div className={styles.container}>
       <RealtimeJobListener />
       <WorkflowStatusPanel initialWorkflows={initialWorkflows} />
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '30px',
-        }}
-      >
+      <div className={styles.header}>
         <DashboardTabs
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -160,33 +136,7 @@ export function JobsClient({
           }}
         />
 
-        <div className={styles.devTools}>
-          <span className={styles.devLabel}>Dev Tools</span>
-          <button
-            className={styles.buttonSmall}
-            onClick={() => handleTrigger('scrape')}
-            disabled={isTriggering}
-            style={isTriggering ? { opacity: 0.5 } : undefined}
-          >
-            Scrape
-          </button>
-          <button
-            className={styles.buttonSmall}
-            onClick={() => handleTrigger('evaluate')}
-            disabled={isTriggering}
-            style={isTriggering ? { opacity: 0.5 } : undefined}
-          >
-            Evaluate
-          </button>
-          {/* <button
-            className={styles.buttonSmall}
-            onClick={() => handleTrigger('apply')}
-            disabled={isTriggering}
-            style={isTriggering ? { opacity: 0.5 } : undefined}
-          >
-            Apply
-          </button> */}
-        </div>
+        <DevToolsPanel />
       </div>
 
       {displayJobs.length === 0 && (
@@ -196,15 +146,7 @@ export function JobsClient({
           </div>
           <h2>No jobs here yet.</h2>
           {isAnonymous && (
-            <p
-              style={{
-                marginTop: '16px',
-                color: 'var(--text-muted)',
-                maxWidth: '600px',
-                lineHeight: '1.6',
-                fontSize: '0.95rem',
-              }}
-            >
+            <p className={styles.sandboxInstructions}>
               Welcome to the anonymous sandbox! To test the platform:
               <br />
               1. Click <strong>Scrape</strong> in the Dev Tools panel above to search and find new
