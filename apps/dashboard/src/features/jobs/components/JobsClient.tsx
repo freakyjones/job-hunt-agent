@@ -8,10 +8,6 @@ import { updateJobStatusAction } from '@/app/actions';
 import { Job, JobStatus } from '@job-hunt/types';
 import { DashboardTabs, TabName } from './DashboardTabs';
 import { JobCard } from './JobCard';
-import { WorkflowStatusPanel } from './WorkflowStatusPanel';
-import { WorkflowRun } from '../services/jobs';
-import { DevToolsPanel } from './DevToolsPanel';
-import { useWorkflowRuns } from '../hooks/useWorkflowRuns';
 
 const RealtimeJobListener = dynamic(
   () => import('./RealtimeJobListener').then((mod) => mod.RealtimeJobListener),
@@ -21,12 +17,10 @@ const RealtimeJobListener = dynamic(
 export function JobsClient({
   initialJobs,
   masterResume,
-  initialWorkflows = [],
   isAnonymous = false,
 }: {
   initialJobs: Job[];
   masterResume: string;
-  initialWorkflows?: WorkflowRun[];
   isAnonymous?: boolean;
 }) {
   const [optimisticJobs, addOptimisticJob] = useOptimistic(
@@ -37,11 +31,6 @@ export function JobsClient({
   );
   const [, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<TabName>('inbox');
-
-  const workflows = useWorkflowRuns(initialWorkflows);
-  const isActionRunning = useMemo(() => {
-    return workflows.some((w) => w.status === 'queued' || w.status === 'in_progress');
-  }, [workflows]);
 
   const handleUpdateStatus = useCallback(
     async (id: string, newStatus: JobStatus, oldStatus: JobStatus) => {
@@ -128,7 +117,6 @@ export function JobsClient({
   return (
     <div className={styles.container}>
       <RealtimeJobListener />
-      <WorkflowStatusPanel workflows={workflows} />
       <div className={styles.header}>
         <DashboardTabs
           activeTab={activeTab}
@@ -141,8 +129,6 @@ export function JobsClient({
             rejected: groupedJobs.rejected.length,
           }}
         />
-
-        <DevToolsPanel isActionRunning={isActionRunning} />
       </div>
 
       {displayJobs.length === 0 && (
@@ -155,8 +141,8 @@ export function JobsClient({
             <p className={styles.sandboxInstructions}>
               Welcome to the anonymous sandbox! To test the platform:
               <br />
-              1. Click <strong>Scrape</strong> in the Dev Tools panel above to search and find new
-              jobs.
+              1. Open the <strong>Agent Command Center</strong> (floating widget at bottom right)
+              and click <strong>Scrape Jobs</strong> to search and find new jobs.
               <br />
               2. Wait a few moments (or check the logs) to see jobs loaded into your Inbox.
               <br />

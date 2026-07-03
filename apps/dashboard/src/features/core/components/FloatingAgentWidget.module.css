@@ -1,0 +1,196 @@
+.widgetContainer {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+/* FAB */
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent-ai-gradient);
+  border: 1px solid var(--border-subtle);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    0 0 15px var(--glow-primary);
+  transition:
+    transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.2s ease;
+  padding: 0;
+}
+
+.fab:hover {
+  transform: scale(1.05);
+  box-shadow:
+    0 6px 25px rgba(0, 0, 0, 0.5),
+    0 0 20px var(--glow-secondary);
+}
+
+.fab:active {
+  transform: scale(0.95);
+}
+
+/* Pulsing effect when agent is running */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--glow-primary);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(0, 0, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+.fabPulsing {
+  animation: pulse 2s infinite;
+}
+
+/* Popover Panel */
+.popover {
+  width: 380px;
+  background: var(--bg-surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: bottom right;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.popoverHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.popoverHeader h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  background: var(--accent-ai-gradient);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.closeButton {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 0.2s,
+    background 0.2s;
+}
+
+.closeButton:hover {
+  color: var(--text-high-contrast);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.popoverContent {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Dev Tools Buttons */
+.devTools {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.devLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.buttonGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.buttonSmall {
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-high-contrast);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1 1 calc(50% - 0.5rem); /* two column layout */
+}
+
+.buttonSmall:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.networkBtn {
+  border-color: #3ecf8e;
+  color: #3ecf8e;
+  flex: 1 1 100%; /* Full width */
+}
+
+.networkBtn:hover:not(:disabled) {
+  background: rgba(62, 207, 142, 0.1);
+  border-color: #3ecf8e;
+  color: #3ecf8e;
+}
+
+/* Status Section */
+.statusSection {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 1.5rem;
+}
+
+.emptyStatus {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  padding: 1rem 0;
+  font-style: italic;
+}
