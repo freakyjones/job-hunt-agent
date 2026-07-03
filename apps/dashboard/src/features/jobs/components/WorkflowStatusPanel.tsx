@@ -19,6 +19,9 @@ export function WorkflowStatusPanel({ initialWorkflows }: { initialWorkflows: Wo
         (payload) => {
           setWorkflows((prev) => {
             const updated = payload.new as WorkflowRun;
+            if (updated.workflow_name !== 'Zero-Cost Job Hunt Agent') {
+              return prev;
+            }
             if (payload.eventType === 'INSERT') {
               // Add to top and limit to 5
               return [updated, ...prev].slice(0, 5);

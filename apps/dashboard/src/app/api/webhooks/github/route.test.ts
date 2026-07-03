@@ -39,7 +39,7 @@ describe('POST /api/webhooks/github', () => {
     const body = {
       workflow_run: {
         id: 123456,
-        name: 'Job Hunt Agent Scraper',
+        name: 'Zero-Cost Job Hunt Agent',
         status: 'in_progress',
         conclusion: null,
       },
@@ -68,7 +68,7 @@ describe('POST /api/webhooks/github', () => {
         run_id: 123456,
         status: 'in_progress',
         conclusion: null,
-        workflow_name: 'Job Hunt Agent Scraper',
+        workflow_name: 'Zero-Cost Job Hunt Agent',
       }),
       { onConflict: 'run_id' }
     );

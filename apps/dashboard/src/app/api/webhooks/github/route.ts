@@ -20,6 +20,12 @@ export async function POST(req: NextRequest) {
     // We only care about workflow_run events
     if (payload.workflow_run) {
       const run = payload.workflow_run;
+
+      // Ignore non-agent workflow runs (like PR tests, lighthouse CI, etc.)
+      if (run.name !== 'Zero-Cost Job Hunt Agent') {
+        return NextResponse.json({ success: true, message: 'Ignored non-agent workflow run' });
+      }
+
       const supabase = createAdminClient();
 
       const { error } = await supabase.from('github_workflow_runs').upsert(
