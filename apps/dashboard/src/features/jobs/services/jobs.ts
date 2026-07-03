@@ -61,6 +61,7 @@ export async function getRecentWorkflows(): Promise<{
     const { data, error } = await supabase
       .from('github_workflow_runs')
       .select('*')
+      .eq('workflow_name', 'Zero-Cost Job Hunt Agent')
       .order('updated_at', { ascending: false })
       .limit(5);
 

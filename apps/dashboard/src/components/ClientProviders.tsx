@@ -2,6 +2,8 @@
 
 import dynamic from 'next/dynamic';
 
+import toast, { ToastBar } from 'react-hot-toast';
+
 const Toaster = dynamic(() => import('react-hot-toast').then((m) => m.Toaster), {
   ssr: false,
 });
@@ -38,7 +40,25 @@ export function ClientProviders() {
             },
           },
         }}
-      />
+      >
+        {(t) => (
+          <ToastBar toast={t}>
+            {({ icon, message }) => (
+              <>
+                {icon}
+                {message}
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  className="toast-close-btn"
+                  aria-label="Dismiss toast"
+                >
+                  ✕
+                </button>
+              </>
+            )}
+          </ToastBar>
+        )}
+      </Toaster>
       <WebVitalsReporter />
     </>
   );

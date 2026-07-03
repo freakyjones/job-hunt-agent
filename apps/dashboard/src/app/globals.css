@@ -264,3 +264,25 @@ body::before {
     border-radius: 100% 60% 60% 100% / 100% 100% 60% 60%;
   }
 }
+
+/* Toast close button styling */
+.toast-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.toast-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-high-contrast);
+}

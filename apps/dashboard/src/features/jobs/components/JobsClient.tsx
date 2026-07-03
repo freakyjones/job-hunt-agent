@@ -178,14 +178,14 @@ export function JobsClient({
           >
             Evaluate
           </button>
-          <button
+          {/* <button
             className={styles.buttonSmall}
             onClick={() => handleTrigger('apply')}
             disabled={isTriggering}
             style={isTriggering ? { opacity: 0.5 } : undefined}
           >
             Apply
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -215,8 +215,7 @@ export function JobsClient({
               3. Open a job card and click <strong>Save</strong> or <strong>Reject</strong> to
               interact with the UI.
               <br />
-              4. Trigger <strong>Evaluate</strong> or <strong>Apply</strong> to test the AI
-              tailoring and automated application flows!
+              4. Trigger <strong>Evaluate</strong> to test the AI tailoring flow!
             </p>
           )}
         </div>

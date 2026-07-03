@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Job } from '@job-hunt/types';
 import toast from 'react-hot-toast';
+import styles from './TailorResumeButton.module.css';
 
 interface TailorResumeButtonProps {
   job: Job;
@@ -65,26 +66,53 @@ export const TailorResumeButton = React.memo(function TailorResumeButton({
   return (
     <>
       <button
-        className="button button-secondary"
+        className={`button button-secondary ${styles.button} ${isLoading ? styles.buttonLoading : ''}`}
         onClick={handleGenerate}
         disabled={isLoading}
-        style={isLoading ? { opacity: 0.5 } : {}}
       >
-        {isLoading ? '⏳ Tailoring...' : '✨ Tailor PDF'}
+        {isLoading ? (
+          <>
+            <svg
+              className={styles.spinner}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" />
+              <path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="currentColor" />
+            </svg>
+            <span>Tailoring...</span>
+          </>
+        ) : (
+          <>
+            <svg
+              className={styles.icon}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M15 4V2" />
+              <path d="M15 16v-2" />
+              <path d="M8 9h2" />
+              <path d="M20 9h2" />
+              <path d="M17.8 5.8l-1.4 1.4" />
+              <path d="M13.6 9.6l-1.4 1.4" />
+              <path d="M9.6 5.8l1.4 1.4" />
+              <path d="M13.6 4.4l-1.4-1.4" />
+              <path d="M3 21l9-9" />
+              <path d="M12.2 11.8l9.8-9.8" />
+            </svg>
+            <span>Tailor PDF</span>
+          </>
+        )}
       </button>
-      {error && (
-        <span
-          style={{
-            color: 'var(--danger)',
-            fontSize: '11px',
-            position: 'absolute',
-            bottom: '4px',
-            left: '24px',
-          }}
-        >
-          {error}
-        </span>
-      )}
+      {error && <span className={styles.errorText}>{error}</span>}
     </>
   );
 });

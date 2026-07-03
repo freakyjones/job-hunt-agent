@@ -1,0 +1,48 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.buttonLoading {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+/* Subtle hover effect on wand */
+.button:hover .icon:not(.spinner) {
+  transform: rotate(15deg) scale(1.1);
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.errorText {
+  color: var(--accent-error);
+  font-size: 11px;
+  position: absolute;
+  bottom: -18px;
+  left: 0;
+  white-space: nowrap;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
