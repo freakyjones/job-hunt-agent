@@ -1,4 +1,5 @@
 export async function triggerScraperWorkflow(
+  workflowFilename: string = 'job_hunt.yml',
   command: string = 'all',
   userId?: string,
   userEmail?: string
@@ -13,7 +14,7 @@ export async function triggerScraperWorkflow(
   }
 
   const res = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/actions/workflows/job_hunt.yml/dispatches`,
+    `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflowFilename}/dispatches`,
     {
       method: 'POST',
       headers: {

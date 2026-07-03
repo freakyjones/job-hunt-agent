@@ -28,6 +28,10 @@ vi.mock('./RealtimeJobListener', () => ({
   RealtimeJobListener: () => <div data-testid="realtime-listener" />,
 }));
 
+vi.mock('../hooks/useWorkflowRuns', () => ({
+  useWorkflowRuns: vi.fn(() => []),
+}));
+
 vi.mock('./WorkflowStatusPanel', () => ({
   WorkflowStatusPanel: () => <div data-testid="workflow-status-panel" />,
 }));
