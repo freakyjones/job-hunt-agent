@@ -1,43 +1,11 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import { useState, useMemo } from 'react';
 import { WorkflowRun } from '../services/jobs';
 import styles from './WorkflowStatusPanel.module.css';
 
-export function WorkflowStatusPanel({ initialWorkflows }: { initialWorkflows: WorkflowRun[] }) {
-  const [workflows, setWorkflows] = useState<WorkflowRun[]>(initialWorkflows);
+export function WorkflowStatusPanel({ workflows }: { workflows: WorkflowRun[] }) {
   const [dismissedRunIds, setDismissedRunIds] = useState<number[]>([]);
-  const supabase = useMemo(() => createClient(), []);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('github-workflows')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'github_workflow_runs' },
-        (payload) => {
-          setWorkflows((prev) => {
-            const updated = payload.new as WorkflowRun;
-            if (updated.workflow_name !== 'Zero-Cost Job Hunt Agent') {
-              return prev;
-            }
-            if (payload.eventType === 'INSERT') {
-              // Add to top and limit to 5
-              return [updated, ...prev].slice(0, 5);
-            } else if (payload.eventType === 'UPDATE') {
-              return prev.map((w) => (w.run_id === updated.run_id ? updated : w));
-            }
-            return prev;
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase]);
 
   const handleDismiss = (runId: number) => {
     setDismissedRunIds((prev) => [...prev, runId]);

@@ -4,12 +4,23 @@ on:
   schedule:
     - cron: '0 */6 * * *' # Every 6 hours
   workflow_dispatch: # Allows manual trigger from UI
+    inputs:
+      command:
+        description: 'Command to run'
+        required: false
+        default: 'all'
+      user_id:
+        description: 'User ID triggering the workflow'
+        required: false
+      user_email:
+        description: 'User email triggering the workflow'
+        required: false
 
 jobs:
   run-networking-agent:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,7 +33,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: 'pnpm'
 
       - name: Install dependencies

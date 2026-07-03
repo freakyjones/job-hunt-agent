@@ -11,6 +11,7 @@ import { JobCard } from './JobCard';
 import { WorkflowStatusPanel } from './WorkflowStatusPanel';
 import { WorkflowRun } from '../services/jobs';
 import { DevToolsPanel } from './DevToolsPanel';
+import { useWorkflowRuns } from '../hooks/useWorkflowRuns';
 
 const RealtimeJobListener = dynamic(
   () => import('./RealtimeJobListener').then((mod) => mod.RealtimeJobListener),
@@ -36,6 +37,11 @@ export function JobsClient({
   );
   const [, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<TabName>('inbox');
+
+  const workflows = useWorkflowRuns(initialWorkflows);
+  const isActionRunning = useMemo(() => {
+    return workflows.some((w) => w.status === 'queued' || w.status === 'in_progress');
+  }, [workflows]);
 
   const handleUpdateStatus = useCallback(
     async (id: string, newStatus: JobStatus, oldStatus: JobStatus) => {
@@ -122,7 +128,7 @@ export function JobsClient({
   return (
     <div className={styles.container}>
       <RealtimeJobListener />
-      <WorkflowStatusPanel initialWorkflows={initialWorkflows} />
+      <WorkflowStatusPanel workflows={workflows} />
       <div className={styles.header}>
         <DashboardTabs
           activeTab={activeTab}
@@ -136,7 +142,7 @@ export function JobsClient({
           }}
         />
 
-        <DevToolsPanel />
+        <DevToolsPanel isActionRunning={isActionRunning} />
       </div>
 
       {displayJobs.length === 0 && (

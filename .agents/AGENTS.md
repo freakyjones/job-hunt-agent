@@ -62,3 +62,8 @@
 ## Agent Telemetry & Observability
 
 - **No Error Masking:** When writing or modifying Playwright automation scripts (like auto-appliers) or AI evaluators, NEVER mask failures (e.g. `return success || true`). Autonomous agents rely entirely on accurate telemetry; masking failures poisons the data pipeline.
+
+## GitHub Actions Integration
+
+- **Workflow Dispatch Inputs:** Whenever a Next.js Server Action or frontend client manually triggers a GitHub Action workflow via the GitHub REST API (e.g., sending a payload with `command`, `user_id`), you MUST ensure that the target `.github/workflows/*.yml` file explicitly defines every parameter in the `inputs` section under the `workflow_dispatch` trigger. Unmapped inputs will cause a 422 API error.
+- **Node Version Consistency:** When creating or modifying GitHub Action workflows (`.github/workflows/`), always ensure the `actions/setup-node` version exactly matches the stable Node version used across the rest of the monorepo (e.g., Node 22). Do not rely on default boilerplate versions.

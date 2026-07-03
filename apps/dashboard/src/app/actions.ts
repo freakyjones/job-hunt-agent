@@ -66,11 +66,49 @@ export async function triggerGitHubAction(command: string = 'all') {
       data: { user },
     } = await supabase.auth.getUser();
     await verifyAuth();
-    await triggerScraperWorkflow(command, user?.id, user?.email);
+
+    // Check and increment rate limit via RPC
+    const { data: limitCheck, error: limitError } = await supabase.rpc('increment_action_limit');
+    if (limitError || !limitCheck) {
+      return {
+        success: false,
+        error: 'Daily manual trigger limit reached (max 2/day). Please try again tomorrow.',
+      };
+    }
+
+    await triggerScraperWorkflow('job_hunt.yml', command, user?.id, user?.email);
     return { success: true };
   } catch (e: unknown) {
     if (e instanceof Error) {
       console.error('[Action: triggerGitHubAction] Error:', e.message);
+      return { success: false, error: e.message };
+    }
+    return { success: false, error: 'Unknown error' };
+  }
+}
+
+export async function triggerNetworkingAction() {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    await verifyAuth();
+
+    // Check and increment rate limit via RPC
+    const { data: limitCheck, error: limitError } = await supabase.rpc('increment_action_limit');
+    if (limitError || !limitCheck) {
+      return {
+        success: false,
+        error: 'Daily manual trigger limit reached (max 2/day). Please try again tomorrow.',
+      };
+    }
+
+    await triggerScraperWorkflow('networking-agent.yml', 'all', user?.id, user?.email);
+    return { success: true };
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      console.error('[Action: triggerNetworkingAction] Error:', e.message);
       return { success: false, error: e.message };
     }
     return { success: false, error: 'Unknown error' };
