@@ -4,6 +4,17 @@ on:
   schedule:
     - cron: '0 */6 * * *' # Every 6 hours
   workflow_dispatch: # Allows manual trigger from UI
+    inputs:
+      command:
+        description: 'Command to run'
+        required: false
+        default: 'all'
+      user_id:
+        description: 'User ID triggering the workflow'
+        required: false
+      user_email:
+        description: 'User email triggering the workflow'
+        required: false
 
 jobs:
   run-networking-agent:
