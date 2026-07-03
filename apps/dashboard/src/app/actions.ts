@@ -114,3 +114,31 @@ export async function triggerNetworkingAction() {
     return { success: false, error: 'Unknown error' };
   }
 }
+
+import { dismissWorkflowRunService } from '../features/jobs/services/workflow';
+
+export async function dismissWorkflowRunAction(runId: number) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    await verifyAuth();
+
+    if (!user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const result = await dismissWorkflowRunService(runId, user.id);
+    if (result.error) {
+      return { success: false, error: result.error.message };
+    }
+
+    return { success: true };
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      return { success: false, error: e.message };
+    }
+    return { success: false, error: 'Unknown error' };
+  }
+}
