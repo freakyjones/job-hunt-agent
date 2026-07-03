@@ -7,6 +7,7 @@ import styles from './WorkflowStatusPanel.module.css';
 
 export function WorkflowStatusPanel({ initialWorkflows }: { initialWorkflows: WorkflowRun[] }) {
   const [workflows, setWorkflows] = useState<WorkflowRun[]>(initialWorkflows);
+  const [dismissedRunIds, setDismissedRunIds] = useState<number[]>([]);
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
@@ -35,7 +36,15 @@ export function WorkflowStatusPanel({ initialWorkflows }: { initialWorkflows: Wo
     };
   }, [supabase]);
 
-  if (workflows.length === 0) {
+  const handleDismiss = (runId: number) => {
+    setDismissedRunIds((prev) => [...prev, runId]);
+  };
+
+  const visibleWorkflows = useMemo(() => {
+    return workflows.filter((w) => !dismissedRunIds.includes(w.run_id));
+  }, [workflows, dismissedRunIds]);
+
+  if (visibleWorkflows.length === 0) {
     return null;
   }
 
@@ -63,7 +72,7 @@ export function WorkflowStatusPanel({ initialWorkflows }: { initialWorkflows: Wo
         <h3 className={styles.panelTitle}>Agent Workflow Status</h3>
       </div>
       <div className={styles.workflowList}>
-        {workflows.map((w) => (
+        {visibleWorkflows.map((w) => (
           <div key={w.id || w.run_id} className={styles.workflowItem}>
             <div className={styles.workflowInfo}>
               <span className={styles.workflowName}>{w.workflow_name || 'Job Hunt Agent'}</span>
@@ -80,6 +89,13 @@ export function WorkflowStatusPanel({ initialWorkflows }: { initialWorkflows: Wo
                 className={`${styles.statusIndicator} ${getStatusClass(w.status, w.conclusion)}`}
               />
               <span>{formatStatus(w.status, w.conclusion)}</span>
+              <button
+                onClick={() => handleDismiss(w.run_id)}
+                className={styles.dismissButton}
+                aria-label="Dismiss run status"
+              >
+                ✕
+              </button>
             </div>
           </div>
         ))}
