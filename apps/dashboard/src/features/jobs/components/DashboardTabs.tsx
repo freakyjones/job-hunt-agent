@@ -1,13 +1,12 @@
 import styles from '../../../app/page.module.css';
 
-export type TabName = 'inbox' | 'queue' | 'applied' | 'rejected' | 'saved';
+export type TabName = 'inbox' | 'applied' | 'rejected' | 'saved';
 
 interface DashboardTabsProps {
   activeTab: TabName;
   setActiveTab: (tab: TabName) => void;
   counts: {
     inbox: number;
-    queue: number;
     saved: number;
     applied: number;
     rejected: number;
