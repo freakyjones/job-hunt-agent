@@ -28,12 +28,14 @@ const searchTool = new DuckDuckGoSearch({ maxResults: 3 });
 // The primary model (fast but rate limited on free tier)
 const primaryModel = new ChatGoogleGenerativeAI({
   modelName: 'gemini-2.5-flash',
+  apiKey: process.env.GEMINI_API_KEY,
   maxRetries: 0,
 });
 
 // The fallback model (higher quota)
 const fallbackModel = new ChatGoogleGenerativeAI({
   modelName: 'gemma-4-31b-it',
+  apiKey: process.env.GEMINI_API_KEY,
   maxRetries: 2,
 });
 

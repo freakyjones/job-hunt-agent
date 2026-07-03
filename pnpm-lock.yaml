@@ -223,7 +223,7 @@ importers:
         version: link:../../packages/types
       '@langchain/community':
         specifier: ^0.2.20
-        version: 0.2.33(@langchain/google-genai@0.0.22(openai@4.104.0(ws@8.21.0)(zod@3.25.76))(zod@3.25.76))(@langchain/langgraph@0.0.30(openai@4.104.0(ws@8.21.0)(zod@3.25.76)))(@supabase/supabase-js@2.108.2)(google-auth-library@10.7.0)(ignore@7.0.5)(jsdom@29.1.1(@noble/hashes@1.8.0))(mammoth@1.12.0)(openai@4.104.0(ws@8.21.0)(zod@3.25.76))(pdf-parse@1.1.4)(playwright@1.61.1)(ws@8.21.0)
+        version: 0.2.33(@langchain/google-genai@0.0.22(openai@4.104.0(ws@8.21.0)(zod@3.25.76))(zod@3.25.76))(@langchain/langgraph@0.0.30(openai@4.104.0(ws@8.21.0)(zod@3.25.76)))(@supabase/supabase-js@2.108.2)(duck-duck-scrape@2.2.7)(google-auth-library@10.7.0)(ignore@7.0.5)(jsdom@29.1.1(@noble/hashes@1.8.0))(mammoth@1.12.0)(openai@4.104.0(ws@8.21.0)(zod@3.25.76))(pdf-parse@1.1.4)(playwright@1.61.1)(ws@8.21.0)
       '@langchain/core':
         specifier: ^0.2.18
         version: 0.2.36(openai@4.104.0(ws@8.21.0)(zod@3.25.76))
@@ -239,6 +239,9 @@ importers:
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
+      duck-duck-scrape:
+        specifier: ^2.2.7
+        version: 2.2.7
       rss-parser:
         specifier: ^3.13.0
         version: 3.13.0
@@ -2133,6 +2136,9 @@ packages:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
 
+  duck-duck-scrape@2.2.7:
+    resolution: {integrity: sha512-BEcglwnfx5puJl90KQfX+Q2q5vCguqyMpZcSRPBWk8OY55qWwV93+E+7DbIkrGDW4qkqPfUvtOUdi0lXz6lEMQ==}
+
   duck@0.1.12:
     resolution: {integrity: sha512-wkctla1O6VfP89gQ+J/yDesM0S7B7XLXjKGzXxMDVFg7uEn706niAtyYovKbyq1oT9YwDcly721/iUWoc8MVRg==}
 
@@ -2597,6 +2603,9 @@ packages:
     resolution: {integrity: sha512-CV9TW3Y3f8/wT0BRFc1/KAVQ3TUHiXmaAb6VW9vtiMFf7SLoMd1PdAc4W3KFOFETBJUb90KatHqlsZMWV+R9Gg==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
 
+  html-entities@2.6.0:
+    resolution: {integrity: sha512-kig+rMn/QOVRvr7c86gQ8lWXq+Hkv6CbAH1hLu+RG338StTpE8Z0b44SDVaqVu7HGKf27frdmUYEs9hTUX/cLQ==}
+
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
 
@@ -2615,6 +2624,10 @@ packages:
   iceberg-js@0.8.1:
     resolution: {integrity: sha512-1dhVQZXhcHje7798IVM+xoo/1ZdVfzOMIc8/rgVSijRK38EDqOJoGula9N/8ZI5RD8QTxNQtK/Gozpr+qUqRRA==}
     engines: {node: '>=20.0.0'}
+
+  iconv-lite@0.6.3:
+    resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
+    engines: {node: '>=0.10.0'}
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
@@ -3298,6 +3311,11 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
+  needle@3.5.0:
+    resolution: {integrity: sha512-jaQyPKKk2YokHrEg+vFDYxXIHTCBgiZwSHOoVx/8V3GIBS8/VN6NdVRmg8q1ERtPkMvmOvebsgga4sAj5hls/w==}
+    engines: {node: '>= 4.4.x'}
+    hasBin: true
+
   next@16.2.9:
     resolution: {integrity: sha512-MEOJiq/UvuezAdqVSceHbqDgZt1kDw2tpGVOlsdIoJsQdbN2JY2hpVG4xnXGkbdJUOEWhnRfiu/O4Hpc9Juwww==}
     engines: {node: '>=20.9.0'}
@@ -3757,6 +3775,9 @@ packages:
   safe-stable-stringify@2.5.0:
     resolution: {integrity: sha512-b3rppTKm9T+PsVCBEOUR46GWI7fdOs00VKZ1+9c1EWDaDMvjQc6tUwuFyIprgGgTcWoVHSKrU8H31ZHA2e0RHA==}
     engines: {node: '>=10'}
+
+  safer-buffer@2.1.2:
+    resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
 
   sax@1.6.0:
     resolution: {integrity: sha512-6R3J5M4AcbtLUdZmRv2SygeVaM7IhrLXu9BmnOGmmACak8fiUtOsYNWUS4uK7upbmHIBbLBeFeI//477BKLBzA==}
@@ -4746,7 +4767,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@langchain/community@0.2.33(@langchain/google-genai@0.0.22(openai@4.104.0(ws@8.21.0)(zod@3.25.76))(zod@3.25.76))(@langchain/langgraph@0.0.30(openai@4.104.0(ws@8.21.0)(zod@3.25.76)))(@supabase/supabase-js@2.108.2)(google-auth-library@10.7.0)(ignore@7.0.5)(jsdom@29.1.1(@noble/hashes@1.8.0))(mammoth@1.12.0)(openai@4.104.0(ws@8.21.0)(zod@3.25.76))(pdf-parse@1.1.4)(playwright@1.61.1)(ws@8.21.0)':
+  '@langchain/community@0.2.33(@langchain/google-genai@0.0.22(openai@4.104.0(ws@8.21.0)(zod@3.25.76))(zod@3.25.76))(@langchain/langgraph@0.0.30(openai@4.104.0(ws@8.21.0)(zod@3.25.76)))(@supabase/supabase-js@2.108.2)(duck-duck-scrape@2.2.7)(google-auth-library@10.7.0)(ignore@7.0.5)(jsdom@29.1.1(@noble/hashes@1.8.0))(mammoth@1.12.0)(openai@4.104.0(ws@8.21.0)(zod@3.25.76))(pdf-parse@1.1.4)(playwright@1.61.1)(ws@8.21.0)':
     dependencies:
       '@langchain/core': 0.2.36(openai@4.104.0(ws@8.21.0)(zod@3.25.76))
       '@langchain/openai': 0.2.11(ws@8.21.0)
@@ -4762,6 +4783,7 @@ snapshots:
     optionalDependencies:
       '@langchain/langgraph': 0.0.30(openai@4.104.0(ws@8.21.0)(zod@3.25.76))
       '@supabase/supabase-js': 2.108.2
+      duck-duck-scrape: 2.2.7
       google-auth-library: 10.7.0
       ignore: 7.0.5
       jsdom: 29.1.1(@noble/hashes@1.8.0)
@@ -5773,6 +5795,11 @@ snapshots:
 
   dotenv@17.4.2: {}
 
+  duck-duck-scrape@2.2.7:
+    dependencies:
+      html-entities: 2.6.0
+      needle: 3.5.0
+
   duck@0.1.12:
     dependencies:
       underscore: 1.13.8
@@ -6401,6 +6428,8 @@ snapshots:
     transitivePeerDependencies:
       - '@noble/hashes'
 
+  html-entities@2.6.0: {}
+
   html-escaper@2.0.2: {}
 
   https-proxy-agent@7.0.6:
@@ -6417,6 +6446,10 @@ snapshots:
   husky@9.1.7: {}
 
   iceberg-js@0.8.1: {}
+
+  iconv-lite@0.6.3:
+    dependencies:
+      safer-buffer: 2.1.2
 
   ignore@5.3.2: {}
 
@@ -6942,6 +6975,11 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
+  needle@3.5.0:
+    dependencies:
+      iconv-lite: 0.6.3
+      sax: 1.6.0
+
   next@16.2.9(@babel/core@7.29.7)(@playwright/test@1.61.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@next/env': 16.2.9
@@ -7436,6 +7474,8 @@ snapshots:
       is-regex: 1.2.1
 
   safe-stable-stringify@2.5.0: {}
+
+  safer-buffer@2.1.2: {}
 
   sax@1.6.0: {}
 
