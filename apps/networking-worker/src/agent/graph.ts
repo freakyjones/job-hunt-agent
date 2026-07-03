@@ -50,6 +50,9 @@ async function contextualResearcher(state: AgentState): Promise<Partial<AgentSta
   // Search for the company's Engineering or Product leadership
   const query = `site:linkedin.com/in "Engineering Manager" OR "Tech Lead" OR "Product Manager" "${signal.title}"`;
 
+  // Throttling / backoff to prevent DuckDuckGo rate limiting
+  await new Promise((r) => setTimeout(r, 2000));
+
   try {
     const searchResults = await searchTool.invoke(query);
 
@@ -190,6 +193,13 @@ export async function processSignals() {
       const result = await graph.invoke({
         signal: row as CompanySignal,
       });
+
+      if (result.error || result.contactName === 'Unknown') {
+        console.warn(
+          `[Graph] Skipping lead creation for ${row.title} due to search failure or no contact found. Error: ${result.error || 'Unknown contact'}`
+        );
+        continue;
+      }
 
       if (result.contactName && result.draftMessage) {
         // Save to database
