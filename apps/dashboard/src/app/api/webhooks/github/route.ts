@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       const run = payload.workflow_run;
 
       // Ignore non-agent workflow runs (like PR tests, lighthouse CI, etc.)
-      if (run.name !== 'Zero-Cost Job Hunt Agent' && run.name !== 'Networking Agent') {
+      if (run.name !== 'Zero-Cost Job Hunt Agent' && run.name !== 'Zero-Cost Networking Agent') {
         return NextResponse.json({ success: true, message: 'Ignored non-agent workflow run' });
       }
 
