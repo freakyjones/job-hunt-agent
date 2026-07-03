@@ -15,6 +15,9 @@ export function useWorkflowRuns(initialWorkflows: WorkflowRun[]) {
         (payload) => {
           setWorkflows((prev) => {
             const updated = payload.new as WorkflowRun;
+            if (updated && updated.dismissed) {
+              return prev.filter((w) => w.run_id !== updated.run_id);
+            }
             if (payload.eventType === 'INSERT') {
               // Add to top and limit to 10
               return [updated, ...prev].slice(0, 10);

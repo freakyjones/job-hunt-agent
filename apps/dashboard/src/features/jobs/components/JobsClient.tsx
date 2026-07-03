@@ -4,14 +4,10 @@ import { useState, useOptimistic, useTransition, useMemo, useCallback } from 're
 import dynamic from 'next/dynamic';
 import styles from '@/app/page.module.css';
 import toast from 'react-hot-toast';
-import { updateJobStatusAction } from '@/app/actions';
+import { updateJobStatusAction, triggerGitHubAction } from '@/app/actions';
 import { Job, JobStatus } from '@job-hunt/types';
 import { DashboardTabs, TabName } from './DashboardTabs';
 import { JobCard } from './JobCard';
-import { WorkflowStatusPanel } from './WorkflowStatusPanel';
-import { WorkflowRun } from '../services/jobs';
-import { DevToolsPanel } from './DevToolsPanel';
-import { useWorkflowRuns } from '../hooks/useWorkflowRuns';
 
 const RealtimeJobListener = dynamic(
   () => import('./RealtimeJobListener').then((mod) => mod.RealtimeJobListener),
@@ -21,12 +17,10 @@ const RealtimeJobListener = dynamic(
 export function JobsClient({
   initialJobs,
   masterResume,
-  initialWorkflows = [],
   isAnonymous = false,
 }: {
   initialJobs: Job[];
   masterResume: string;
-  initialWorkflows?: WorkflowRun[];
   isAnonymous?: boolean;
 }) {
   const [optimisticJobs, addOptimisticJob] = useOptimistic(
@@ -37,11 +31,25 @@ export function JobsClient({
   );
   const [, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<TabName>('inbox');
+  const [isTriggering, setIsTriggering] = useState(false);
 
-  const workflows = useWorkflowRuns(initialWorkflows);
-  const isActionRunning = useMemo(() => {
-    return workflows.some((w) => w.status === 'queued' || w.status === 'in_progress');
-  }, [workflows]);
+  const handleTrigger = async (command: string) => {
+    setIsTriggering(true);
+    const loadingToast = toast.loading(`Waking up the agent for ${command}...`);
+    try {
+      const res = await triggerGitHubAction(command);
+      if (res.success) {
+        toast.success(`Agent ${command} triggered!`, { id: loadingToast });
+      } else {
+        toast.error(`Failed to trigger: ${res.error}`, { id: loadingToast });
+      }
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? `Error: ${e.message}` : 'An unexpected error occurred', {
+        id: loadingToast,
+      });
+    }
+    setIsTriggering(false);
+  };
 
   const handleUpdateStatus = useCallback(
     async (id: string, newStatus: JobStatus, oldStatus: JobStatus) => {
@@ -128,7 +136,6 @@ export function JobsClient({
   return (
     <div className={styles.container}>
       <RealtimeJobListener />
-      <WorkflowStatusPanel workflows={workflows} />
       <div className={styles.header}>
         <DashboardTabs
           activeTab={activeTab}
@@ -141,8 +148,24 @@ export function JobsClient({
             rejected: groupedJobs.rejected.length,
           }}
         />
-
-        <DevToolsPanel isActionRunning={isActionRunning} />
+        <div className={styles.devTools}>
+          <button
+            className={styles.buttonSmall}
+            onClick={() => handleTrigger('scrape')}
+            disabled={isTriggering}
+            style={isTriggering ? { opacity: 0.5 } : undefined}
+          >
+            Scrape
+          </button>
+          <button
+            className={styles.buttonSmall}
+            onClick={() => handleTrigger('evaluate')}
+            disabled={isTriggering}
+            style={isTriggering ? { opacity: 0.5 } : undefined}
+          >
+            Evaluate
+          </button>
+        </div>
       </div>
 
       {displayJobs.length === 0 && (
@@ -155,8 +178,8 @@ export function JobsClient({
             <p className={styles.sandboxInstructions}>
               Welcome to the anonymous sandbox! To test the platform:
               <br />
-              1. Click <strong>Scrape</strong> in the Dev Tools panel above to search and find new
-              jobs.
+              1. Open the <strong>Agent Command Center</strong> (floating widget at bottom right)
+              and click <strong>Scrape Jobs</strong> to search and find new jobs.
               <br />
               2. Wait a few moments (or check the logs) to see jobs loaded into your Inbox.
               <br />
