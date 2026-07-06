@@ -80,10 +80,12 @@ export default async function ExamsPage() {
 
       <div className={styles.examGrid}>
         {combinedCards.length > 0 ? (
-          combinedCards.map((card) => <ExamCard key={card.id} exam={card as any} />)
+          combinedCards.map((card) => (
+            <ExamCard key={card.id} exam={card as unknown as import('@job-hunt/types').Exam} />
+          ))
         ) : (
           <div className={styles.emptyState}>
-            <p>You haven't taken any assessments yet.</p>
+            <p>You haven&apos;t taken any assessments yet.</p>
           </div>
         )}
       </div>

@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (e) {
+  } catch (_e) {
     logger.error('Failed to parse incoming telemetry webhook');
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }

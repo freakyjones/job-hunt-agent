@@ -161,7 +161,7 @@ export async function validateAndFetchPendingExam(
 import { SubmitExamPayload } from '@job-hunt/types';
 
 export function calculateExamScoreAndFeedback(
-  questions: Array<{ id: string; exam_answers?: any | any[] }>,
+  questions: Array<{ id: string; exam_answers?: unknown | unknown[] }>,
   payloadData: SubmitExamPayload
 ) {
   let score = 0;

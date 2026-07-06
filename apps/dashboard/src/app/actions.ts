@@ -17,15 +17,15 @@ export async function getResumesAction() {
     if (result.error) {
       console.error(
         '[Action: getResumesAction] Error:',
-        (result.error as any) instanceof Error
-          ? (result.error as any).message
+        (result.error as unknown) instanceof Error
+          ? (result.error as unknown as Error).message
           : String(result.error)
       );
       return {
         success: false,
         error:
-          (result.error as any) instanceof Error
-            ? (result.error as any).message
+          (result.error as unknown) instanceof Error
+            ? (result.error as unknown as Error).message
             : String(result.error),
       };
     }
