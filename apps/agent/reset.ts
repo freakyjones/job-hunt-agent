@@ -8,25 +8,25 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-    console.error("Missing Supabase credentials");
-    process.exit(1);
+  console.error('Missing Supabase credentials');
+  process.exit(1);
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function reset() {
-    console.log("Resetting ERROR jobs to PENDING...");
-    const { data, error } = await supabase
-        .from('jobs')
-        .update({ status: 'PENDING' })
-        .eq('status', 'ERROR')
-        .select();
+  console.log('Resetting ERROR jobs to PENDING...');
+  const { data, error } = await supabase
+    .from('jobs')
+    .update({ status: 'PENDING' })
+    .eq('status', 'ERROR')
+    .select();
 
-    if (error) {
-        console.error("Reset failed:", error.message);
-    } else {
-        console.log(`Reset ${data?.length || 0} jobs.`);
-    }
+  if (error) {
+    console.error('Reset failed:', error instanceof Error ? error.message : String(error));
+  } else {
+    console.log(`Reset ${data?.length || 0} jobs.`);
+  }
 }
 
 reset();

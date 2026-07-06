@@ -67,3 +67,8 @@
 
 - **Workflow Dispatch Inputs:** Whenever a Next.js Server Action or frontend client manually triggers a GitHub Action workflow via the GitHub REST API (e.g., sending a payload with `command`, `user_id`), you MUST ensure that the target `.github/workflows/*.yml` file explicitly defines every parameter in the `inputs` section under the `workflow_dispatch` trigger. Unmapped inputs will cause a 422 API error.
 - **Node Version Consistency:** When creating or modifying GitHub Action workflows (`.github/workflows/`), always ensure the `actions/setup-node` version exactly matches the stable Node version used across the rest of the monorepo (e.g., Node 22). Do not rely on default boilerplate versions.
+
+## Exams & Background Jobs
+
+- **Exam Status Lifecycle (CRITICAL):** When a background worker or Edge Function generates a new exam, the `exams.status` MUST remain `'PENDING'`. Never automatically mark an exam as `'COMPLETED'` upon creation. Doing so breaks the Next.js frontend flow and prematurely reveals the correct answers in the UI. Only user-driven frontend actions (e.g., `submitExamAction`) may transition an exam to `'COMPLETED'`.
+- **LLM Output Validation:** When parsing structured JSON outputs from AI models (e.g., exam questions) inside background jobs, you must validate that the array is non-empty before performing database inserts. If the array is empty or invalid, throw an error to fail the job rather than letting it complete silently.

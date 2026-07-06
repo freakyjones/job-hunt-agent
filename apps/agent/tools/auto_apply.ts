@@ -52,7 +52,10 @@ export class AutoApplier {
       }
       return success;
     } catch (error: any) {
-      console.error(`Error during auto-application for ${company}:`, error.message);
+      console.error(
+        `Error during auto-application for ${company}:`,
+        error instanceof Error ? error.message : String(error)
+      );
       return false;
     } finally {
       await context.close();

@@ -91,7 +91,7 @@ async function runScrape(db: DBStateManager) {
     const naukriJobs = await scrapeNaukri(keyword, location);
     boardJobs.push(...naukriJobs);
   } catch (e: any) {
-    console.error('Naukri scrape failed:', e.message);
+    console.error('Naukri scrape failed:', e instanceof Error ? e.message : String(e));
   }
 
   console.log('Scraping Indeed...');
@@ -101,7 +101,7 @@ async function runScrape(db: DBStateManager) {
     const indeedJobs = await scrapeIndeed(keyword, location);
     boardJobs.push(...indeedJobs);
   } catch (e: any) {
-    console.error('Indeed scrape failed:', e.message);
+    console.error('Indeed scrape failed:', e instanceof Error ? e.message : String(e));
   }
 
   console.log('Polling Top 50 ATS Target Companies...');
@@ -114,7 +114,10 @@ async function runScrape(db: DBStateManager) {
       const results = await Promise.all(
         chunk.map((c) =>
           pollATS(c, keyword.split(' ')[0]).catch((e) => {
-            console.error(`Failed ATS poll for ${c.name}:`, e.message);
+            console.error(
+              `Failed ATS poll for ${c.name}:`,
+              e instanceof Error ? e.message : String(e)
+            );
             return [];
           })
         )
@@ -122,7 +125,7 @@ async function runScrape(db: DBStateManager) {
       atsJobs.push(...results.flat());
     }
   } catch (e: any) {
-    console.error('ATS Polling failed:', e.message);
+    console.error('ATS Polling failed:', e instanceof Error ? e.message : String(e));
   }
 
   console.log('Scraping WeWorkRemotely RSS...');
@@ -143,7 +146,7 @@ async function runScrape(db: DBStateManager) {
       })
     );
   } catch (e: any) {
-    console.error('RSS scrape failed:', e.message);
+    console.error('RSS scrape failed:', e instanceof Error ? e.message : String(e));
   }
 
   // The 50/50 Split Logic (Shuffle to ensure diversity)
@@ -175,7 +178,7 @@ async function runScrape(db: DBStateManager) {
       console.log(`Pushed ${pendingJobs.length} jobs to the database for deduplication.`);
     } catch (e: unknown) {
       if (e instanceof Error) {
-        console.error(`Failed to batch insert jobs:`, e.message);
+        console.error(`Failed to batch insert jobs:`, e instanceof Error ? e.message : String(e));
       }
     }
   }
@@ -305,7 +308,7 @@ async function runApply(db: DBStateManager) {
           } catch (e: any) {
             console.error(
               `Tailoring failed for ${job.company}, falling back to master resume:`,
-              e.message
+              e instanceof Error ? e.message : String(e)
             );
           }
         }
@@ -324,7 +327,10 @@ async function runApply(db: DBStateManager) {
           await db.updateJobStatus(job.id, JobStatus.ERROR);
         }
       } catch (err: any) {
-        console.error(`Failed to auto-apply to ${job.company}:`, err?.message || err);
+        console.error(
+          `Failed to auto-apply to ${job.company}:`,
+          err instanceof Error ? err.message : String(err) || err
+        );
         await db.updateJobStatus(job.id, JobStatus.ERROR);
       }
     }

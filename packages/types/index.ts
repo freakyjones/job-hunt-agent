@@ -102,3 +102,50 @@ export const NetworkingLeadSchema = z.object({
 });
 
 export type NetworkingLead = z.infer<typeof NetworkingLeadSchema>;
+
+export enum ExamStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+}
+
+export const ExamStatusEnum = z.nativeEnum(ExamStatus);
+
+export const ExamSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  job_id: z.string().nullable().optional(),
+  status: ExamStatusEnum,
+  score: z.number().nullable().optional(),
+  created_at: z.string().optional(),
+});
+
+export type Exam = z.infer<typeof ExamSchema>;
+
+export const ExamQuestionSchema = z.object({
+  id: z.string().uuid(),
+  exam_id: z.string().uuid(),
+  question_text: z.string(),
+  options: z.array(z.string()),
+  created_at: z.string().optional(),
+});
+
+export type ExamQuestion = z.infer<typeof ExamQuestionSchema>;
+
+export const ExamAnswerSchema = z.object({
+  question_id: z.string().uuid(),
+  correct_option: z.string(),
+  explanation: z.string(),
+  created_at: z.string().optional(),
+});
+
+export type ExamAnswer = z.infer<typeof ExamAnswerSchema>;
+
+// Input schema for submitting an exam
+export const SubmitExamPayloadSchema = z.array(
+  z.object({
+    question_id: z.string().uuid(),
+    selected_option: z.string(),
+  })
+);
+
+export type SubmitExamPayload = z.infer<typeof SubmitExamPayloadSchema>;

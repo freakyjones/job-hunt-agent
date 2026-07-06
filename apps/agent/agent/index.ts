@@ -133,7 +133,7 @@ export class JobHuntAgent {
     } catch (error) {
       console.error('JSON Parsing/Validation failed. Raw response:', response.text);
       if (error instanceof Error) {
-        console.error(error.message);
+        console.error(error instanceof Error ? error.message : String(error));
       }
       throw new Error('Gemini returned malformed JSON or failed validation.');
     }

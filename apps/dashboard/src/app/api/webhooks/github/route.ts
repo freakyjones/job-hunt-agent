@@ -40,7 +40,10 @@ export async function POST(req: NextRequest) {
       );
 
       if (error) {
-        console.error('[Github Webhook] Database Error:', error.message);
+        console.error(
+          '[Github Webhook] Database Error:',
+          error instanceof Error ? error.message : String(error)
+        );
         return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
       }
     }

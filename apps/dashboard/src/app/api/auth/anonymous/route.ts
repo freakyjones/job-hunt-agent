@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabase.auth.signInAnonymously();
 
   if (error || !data?.user) {
-    console.error('Anonymous login error:', error?.message);
+    console.error('Anonymous login error:', error instanceof Error ? error.message : String(error));
     return NextResponse.redirect(new URL('/login', request.url));
   }
 

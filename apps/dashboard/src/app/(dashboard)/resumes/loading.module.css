@@ -1,0 +1,149 @@
+.skeleton {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.pageHeaderSkeleton {
+  width: 220px;
+  height: 38px;
+  margin-bottom: 8px;
+}
+
+.primaryCard {
+  border: 2px dashed var(--border-subtle);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.primaryLabelSkeleton {
+  width: 120px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.primaryHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.primaryTitleSkeleton {
+  width: 200px;
+  height: 24px;
+}
+
+.primaryDateSkeleton {
+  width: 80px;
+  height: 14px;
+}
+
+.documentLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.docLineFull {
+  width: 100%;
+  height: 14px;
+}
+
+.docLine95 {
+  width: 95%;
+  height: 14px;
+}
+
+.docLine90 {
+  width: 90%;
+  height: 14px;
+}
+
+.docLineShort {
+  width: 40%;
+  height: 14px;
+  margin-top: 8px;
+}
+
+.docLine85 {
+  width: 85%;
+  height: 12px;
+}
+
+.docLine80 {
+  width: 80%;
+  height: 12px;
+}
+
+.actionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.actionBtnSkeleton {
+  height: 38px;
+}
+
+.tailoredCard {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 300px;
+}
+
+.tailoredHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.tailoredTitle {
+  width: 150px;
+  height: 20px;
+}
+
+.tailoredDate {
+  width: 60px;
+  height: 14px;
+}
+
+.tailoredCompany {
+  width: 100px;
+  height: 16px;
+}
+
+.tailoredLines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.tailoredLineFull {
+  width: 100%;
+  height: 12px;
+}
+
+.tailoredLine90 {
+  width: 90%;
+  height: 12px;
+}
+
+.tailoredLine95 {
+  width: 95%;
+  height: 12px;
+}

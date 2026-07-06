@@ -1,0 +1,204 @@
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 240px;
+  gap: 16px;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+.processingCard {
+  border-color: var(--primary-base);
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.statusBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statusBadge[data-status='PENDING'] {
+  background: rgba(241, 196, 15, 0.15);
+  color: #f1c40f;
+}
+
+.statusBadge[data-status='COMPLETED'] {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+}
+
+.statusBadge[data-status='PROCESSING'] {
+  background: rgba(52, 152, 219, 0.15);
+  color: #3498db;
+}
+
+.date {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-high-contrast);
+  margin: 0;
+}
+
+.jobContext {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.jobHighlight {
+  color: var(--text-normal);
+  font-weight: 500;
+}
+
+.description {
+  font-size: 14px;
+  color: var(--text-normal);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.processingWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.progressBar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, var(--primary-base), #3498db, var(--primary-base));
+  background-size: 200% 200%;
+  animation: progressShift 2s infinite linear;
+  border-radius: 3px;
+}
+
+.scoreWrapper {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.scoreLabel {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.scoreValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-high-contrast);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+
+.primaryButton,
+.secondaryButton,
+.disabledButton {
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: inline-block;
+  text-align: center;
+}
+
+.primaryButton {
+  background: var(--primary-base);
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+.primaryButton:hover {
+  background: var(--primary-hover);
+}
+
+.secondaryButton {
+  background: transparent;
+  color: var(--text-high-contrast);
+  border: 1px solid var(--border-subtle);
+}
+
+.secondaryButton:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-hover);
+}
+
+.disabledButton {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  cursor: not-allowed;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes progressShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
