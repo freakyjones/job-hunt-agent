@@ -6,15 +6,15 @@ import { submitExamAction } from '../actions';
 import { toast } from 'react-hot-toast';
 import styles from './TakeExamForm.module.css';
 
-interface TakeExamFormProps {
-  examId: string;
-  questions: ExamQuestion[];
-  initialFeedback?: Record<
+type TakeExamFormProps = {
+  readonly examId: string;
+  readonly questions: ExamQuestion[];
+  readonly initialFeedback?: Record<
     string,
     { correct: boolean; correct_option: string; explanation: string }
   >;
-  initialScore?: number | null;
-}
+  readonly initialScore?: number | null;
+};
 
 export function TakeExamForm({
   examId,
@@ -105,7 +105,7 @@ export function TakeExamForm({
               </h3>
 
               <div className={styles.optionsList}>
-                {q.options.map((option, optIdx) => {
+                {q.options.map((option) => {
                   const isSelected = selectedOption === option;
                   const isCorrect = qFeedback?.correct_option === option;
                   const isWrongSelection = qFeedback && isSelected && !isCorrect;
@@ -121,7 +121,7 @@ export function TakeExamForm({
                   }
 
                   return (
-                    <label key={optIdx} className={optionClass}>
+                    <label key={option} className={optionClass}>
                       <input
                         type="radio"
                         name={q.id}

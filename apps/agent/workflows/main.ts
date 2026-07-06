@@ -66,47 +66,34 @@ process.on('SIGTERM', () => {
   logFatalErrorToSupabase(new Error('Process received SIGTERM (GitHub Runner Timeout)'), 'SIGTERM');
 });
 
-async function runScrape(db: DBStateManager) {
-  console.log('Running Workflow A: Scraper...');
+function getRandomElement(arr: any[]) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
-  // 1. Fetch live jobs
-  const allJobs: any[] = [];
-  const boardJobs: any[] = [];
-  const atsJobs: any[] = [];
-
-  const resumeData = await db.getMasterResumeData();
-  let keywords =
-    resumeData.targetRoles && resumeData.targetRoles.length > 0
-      ? resumeData.targetRoles
-      : ['Software Engineer', 'Fullstack Developer', 'Frontend Developer']; // Fallback
-
-  console.log(`Using target scraping roles: ${keywords.join(', ')}`);
-
-  const locations = ['India', 'Remote'];
-
-  console.log('Scraping Naukri...');
+async function fetchNaukriJobs(keyword: string, location: string) {
   try {
-    const keyword = keywords[Math.floor(Math.random() * keywords.length)];
-    const location = locations[Math.floor(Math.random() * locations.length)];
-    const naukriJobs = await scrapeNaukri(keyword, location);
-    boardJobs.push(...naukriJobs);
+    console.log('Scraping Naukri...');
+    return await scrapeNaukri(keyword, location);
   } catch (e: any) {
     console.error('Naukri scrape failed:', e instanceof Error ? e.message : String(e));
+    return [];
   }
+}
 
-  console.log('Scraping Indeed...');
+async function fetchIndeedJobs(keyword: string, location: string) {
   try {
-    const keyword = keywords[Math.floor(Math.random() * keywords.length)];
-    const location = locations[Math.floor(Math.random() * locations.length)];
-    const indeedJobs = await scrapeIndeed(keyword, location);
-    boardJobs.push(...indeedJobs);
+    console.log('Scraping Indeed...');
+    return await scrapeIndeed(keyword, location);
   } catch (e: any) {
     console.error('Indeed scrape failed:', e instanceof Error ? e.message : String(e));
+    return [];
   }
+}
 
+async function fetchATSJobs(keyword: string) {
   console.log('Polling Top 50 ATS Target Companies...');
+  const atsJobs = [];
   try {
-    const keyword = keywords[Math.floor(Math.random() * keywords.length)];
     const chunks = [];
     for (let i = 0; i < TARGET_COMPANIES.length; i += 10)
       chunks.push(TARGET_COMPANIES.slice(i, i + 10));
@@ -127,8 +114,18 @@ async function runScrape(db: DBStateManager) {
   } catch (e: any) {
     console.error('ATS Polling failed:', e instanceof Error ? e.message : String(e));
   }
+  return atsJobs;
+}
 
+async function fetchRssJobs() {
   console.log('Scraping WeWorkRemotely RSS...');
+  const atsJobs: {
+    title: string;
+    company: string;
+    description: string;
+    url: string;
+    atsType: string;
+  }[] = [];
   try {
     const rssJobs = await scrapeRssFeed(
       'https://weworkremotely.com/categories/remote-programming-jobs.rss'
@@ -148,28 +145,53 @@ async function runScrape(db: DBStateManager) {
   } catch (e: any) {
     console.error('RSS scrape failed:', e instanceof Error ? e.message : String(e));
   }
+  return atsJobs;
+}
 
-  // The 50/50 Split Logic (Shuffle to ensure diversity)
+async function runScrape(db: DBStateManager) {
+  console.log('Running Workflow A: Scraper...');
+
+  const resumeData = await db.getMasterResumeData();
+  let keywords =
+    resumeData.targetRoles && resumeData.targetRoles.length > 0
+      ? resumeData.targetRoles
+      : ['Software Engineer', 'Fullstack Developer', 'Frontend Developer'];
+
+  console.log(`Using target scraping roles: ${keywords.join(', ')}`);
+
+  const locations = ['India', 'Remote'];
+
+  const naukriKeyword = getRandomElement(keywords);
+  const naukriLocation = getRandomElement(locations);
+  const naukriJobs = await fetchNaukriJobs(naukriKeyword, naukriLocation);
+
+  const indeedKeyword = getRandomElement(keywords);
+  const indeedLocation = getRandomElement(locations);
+  const indeedJobs = await fetchIndeedJobs(indeedKeyword, indeedLocation);
+
+  const atsKeyword = getRandomElement(keywords);
+  const polledAtsJobs = await fetchATSJobs(atsKeyword);
+  const rssAtsJobs = await fetchRssJobs();
+
+  const boardJobs = [...naukriJobs, ...indeedJobs];
+  const atsJobs = [...polledAtsJobs, ...rssAtsJobs];
+
   const shuffledBoards = boardJobs.sort(() => 0.5 - Math.random()).slice(0, 15);
   const shuffledAts = atsJobs.sort(() => 0.5 - Math.random()).slice(0, 15);
-  allJobs.push(...shuffledBoards, ...shuffledAts);
+  const allJobs = [...shuffledBoards, ...shuffledAts];
 
   console.log(
     `Found ${boardJobs.length} board jobs, ${atsJobs.length} ATS jobs. Selected 50/50 mix (${shuffledBoards.length} + ${shuffledAts.length}).`
   );
 
   let addedCount = 0;
-  const pendingJobs: Job[] = [];
-
-  for (const details of allJobs) {
-    pendingJobs.push({
-      id: crypto.randomUUID(),
-      company: details.company,
-      role: details.title,
-      url: details.url,
-      status: JobStatus.PENDING,
-    });
-  }
+  const pendingJobs: Job[] = allJobs.map((details) => ({
+    id: crypto.randomUUID(),
+    company: details.company,
+    role: details.title,
+    url: details.url,
+    status: JobStatus.PENDING,
+  }));
 
   if (pendingJobs.length > 0) {
     try {
@@ -189,6 +211,42 @@ async function runScrape(db: DBStateManager) {
                <p><strong>Total Jobs Found:</strong> ${allJobs.length}</p>
                <p><strong>New Jobs Added:</strong> ${addedCount}</p>`,
   });
+}
+
+async function evaluateSingleJob(job: any, agent: any, masterResume: string, db: DBStateManager) {
+  let success = false;
+  let attempts = 0;
+  const maxAttempts = 3;
+
+  while (!success && attempts < maxAttempts) {
+    try {
+      attempts++;
+      const jobDescription = job.description || `Job at ${job.company} for ${job.role}.`;
+      const result = await agent.evaluateJob(jobDescription, masterResume);
+
+      console.log(`Score: ${result.score}/100`);
+      await db.updateJobStatus(job.id, JobStatus.EVALUATED, result.score, result.matchReason);
+
+      success = true;
+      console.log('Waiting 15 seconds to respect Gemini API rate limits...');
+      await new Promise((resolve) => setTimeout(resolve, 15000));
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        console.error(`Evaluation failed for ${job.url} (Attempt ${attempts}):`, e.message);
+        if (e.message.includes('429')) {
+          const backoff = 30000 * Math.pow(2, attempts - 1);
+          console.log(`Hit rate limit. Exponential backoff: Waiting ${backoff / 1000} seconds...`);
+          await new Promise((resolve) => setTimeout(resolve, backoff));
+        } else if (e.message.includes('503')) {
+          console.log(`Service unavailable. Waiting 30 seconds...`);
+          await new Promise((resolve) => setTimeout(resolve, 30000));
+        } else {
+          break;
+        }
+      }
+    }
+  }
+  return success;
 }
 
 async function runEvaluate(db: DBStateManager) {
@@ -213,48 +271,12 @@ async function runEvaluate(db: DBStateManager) {
 
   for (const job of pendingJobs) {
     console.log(`Evaluating ${job.company} - ${job.role}...`);
-    let success = false;
-    let attempts = 0;
-    const maxAttempts = 3;
+    const success = await evaluateSingleJob(job, agent, masterResume, db);
 
-    while (!success && attempts < maxAttempts) {
-      try {
-        attempts++;
-
-        const jobDescription = job.description || `Job at ${job.company} for ${job.role}.`;
-
-        const result = await agent.evaluateJob(jobDescription, masterResume);
-        console.log(`Score: ${result.score}/100`);
-
-        await db.updateJobStatus(job.id, JobStatus.EVALUATED, result.score, result.matchReason);
-        success = true;
-        evaluatedCount++;
-
-        // Anti-Rate-Limit Delay for Gemini Free Tier (15 Requests Per Minute max)
-        console.log('Waiting 15 seconds to respect Gemini API rate limits...');
-        await new Promise((resolve) => setTimeout(resolve, 15000));
-      } catch (e: unknown) {
-        if (e instanceof Error) {
-          console.error(`Evaluation failed for ${job.url} (Attempt ${attempts}):`, e.message);
-
-          if (e.message.includes('429')) {
-            const backoff = 30000 * Math.pow(2, attempts - 1); // 30s, 60s, 120s
-            console.log(
-              `Hit rate limit. Exponential backoff: Waiting ${backoff / 1000} seconds...`
-            );
-            await new Promise((resolve) => setTimeout(resolve, backoff));
-          } else if (e.message.includes('503')) {
-            console.log(`Service unavailable. Waiting 30 seconds...`);
-            await new Promise((resolve) => setTimeout(resolve, 30000));
-          } else {
-            break;
-          }
-        }
-      }
-    }
-
-    if (!success) {
-      console.log(`Marking job ${job.id} as ERROR after ${attempts} attempts.`);
+    if (success) {
+      evaluatedCount++;
+    } else {
+      console.log(`Marking job ${job.id} as ERROR.`);
       await db.updateJobStatus(job.id, JobStatus.ERROR);
       errorCount++;
     }
@@ -268,12 +290,54 @@ async function runEvaluate(db: DBStateManager) {
   });
 }
 
+async function applyToSingleJob(
+  job: any,
+  autoApplier: any,
+  tailor: any,
+  masterResume: string,
+  db: DBStateManager
+) {
+  console.log(`Auto-Applying to accepted job: ${job.company}`);
+  await db.updateJobStatus(job.id, JobStatus.APPLYING);
+  try {
+    let customResumePath = undefined;
+    if (masterResume && job.description) {
+      try {
+        customResumePath = await tailor.tailorResume(masterResume, job.description, job.company);
+      } catch (e: any) {
+        console.error(
+          `Tailoring failed for ${job.company}, falling back to master resume:`,
+          e instanceof Error ? e.message : String(e)
+        );
+      }
+    }
+
+    const success = await autoApplier.execute(job.url || '', job.company, customResumePath);
+    if (success) {
+      await db.updateJobStatus(job.id, JobStatus.APPLIED);
+      await sendEmailNotification({
+        subject: `[Job Hunt Agent] Auto-Applied to ${job.company}`,
+        body: `<p>Successfully applied to ${job.company} for the ${job.role} position.</p>`,
+      });
+    } else {
+      console.error(
+        `Could not auto-apply to ${job.company}. Ensure ATS is supported and job is open.`
+      );
+      await db.updateJobStatus(job.id, JobStatus.ERROR);
+    }
+  } catch (err: any) {
+    console.error(
+      `Failed to auto-apply to ${job.company}:`,
+      err instanceof Error ? err.message : String(err) || err
+    );
+    await db.updateJobStatus(job.id, JobStatus.ERROR);
+  }
+}
+
 async function runApply(db: DBStateManager) {
   console.log('Running Workflow C: Auto-Applier...');
 
   let acceptedJobs = await db.getJobsByStatus(JobStatus.ACCEPTED);
-
-  // Safety Filter: Ensure AutoApplier ONLY attempts Lever or Greenhouse URLs
   acceptedJobs = acceptedJobs.filter(
     (j) => j.url?.includes('lever.co') || j.url?.includes('greenhouse.io')
   );
@@ -285,54 +349,13 @@ async function runApply(db: DBStateManager) {
 
   const autoApplier = new AutoApplier();
   const tailor = new TailoringAgent();
-
   console.log(`Found ${acceptedJobs.length} jobs in the ACCEPTED queue.`);
-
   const masterResume = (await db.getMasterResumeText()) || '';
 
   await autoApplier.init();
-
   try {
     for (const job of acceptedJobs) {
-      console.log(`Auto-Applying to accepted job: ${job.company}`);
-      await db.updateJobStatus(job.id, JobStatus.APPLYING);
-      try {
-        let customResumePath = undefined;
-        if (masterResume && job.description) {
-          try {
-            customResumePath = await tailor.tailorResume(
-              masterResume,
-              job.description,
-              job.company
-            );
-          } catch (e: any) {
-            console.error(
-              `Tailoring failed for ${job.company}, falling back to master resume:`,
-              e instanceof Error ? e.message : String(e)
-            );
-          }
-        }
-
-        const success = await autoApplier.execute(job.url || '', job.company, customResumePath);
-        if (success) {
-          await db.updateJobStatus(job.id, JobStatus.APPLIED);
-          await sendEmailNotification({
-            subject: `[Job Hunt Agent] Auto-Applied to ${job.company}`,
-            body: `<p>Successfully applied to ${job.company} for the ${job.role} position.</p>`,
-          });
-        } else {
-          console.error(
-            `Could not auto-apply to ${job.company}. Ensure ATS is supported and job is open.`
-          );
-          await db.updateJobStatus(job.id, JobStatus.ERROR);
-        }
-      } catch (err: any) {
-        console.error(
-          `Failed to auto-apply to ${job.company}:`,
-          err instanceof Error ? err.message : String(err) || err
-        );
-        await db.updateJobStatus(job.id, JobStatus.ERROR);
-      }
+      await applyToSingleJob(job, autoApplier, tailor, masterResume, db);
     }
   } finally {
     await autoApplier.close();
@@ -348,7 +371,6 @@ async function main() {
 
   logger.info(`Starting Zero-Cost Job Hunt Agent - Mode: ${command}`);
 
-  // Initialize Database State Manager (Supabase)
   const targetUserId = process.env.TARGET_USER_ID;
   if (!targetUserId) {
     throw new Error('TARGET_USER_ID is missing. Cannot proceed with multi-tenant workflow.');

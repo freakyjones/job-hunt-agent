@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 function processDir(dir) {
   const files = fs.readdirSync(dir);
@@ -18,7 +18,7 @@ function processDir(dir) {
       let content = fs.readFileSync(fullPath, 'utf8');
       let changed = false;
 
-      const regex = /console\.error\(([^)]*?)\b([a-zA-Z0-9_]+)\.message\b([^)]*?)\)/g;
+      const regex = /console\.error\(([^)]*?)\b(\w+)\.message\b([^)]*?)\)/g;
 
       content = content.replace(regex, (match, p1, p2, p3) => {
         if (match.includes('instanceof Error')) return match;
@@ -27,7 +27,7 @@ function processDir(dir) {
         return `console.error(${p1}${p2} instanceof Error ? ${p2}.message : String(${p2})${p3})`;
       });
 
-      const optRegex = /console\.error\(([^)]*?)\b([a-zA-Z0-9_]+)\?\.message([^)]*?)\)/g;
+      const optRegex = /console\.error\(([^)]*?)\b(\w+)\?\.message([^)]*?)\)/g;
       content = content.replace(optRegex, (match, p1, p2, p3) => {
         if (match.includes('instanceof Error')) return match;
         changed = true;

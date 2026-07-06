@@ -72,3 +72,19 @@
 
 - **Exam Status Lifecycle (CRITICAL):** When a background worker or Edge Function generates a new exam, the `exams.status` MUST remain `'PENDING'`. Never automatically mark an exam as `'COMPLETED'` upon creation. Doing so breaks the Next.js frontend flow and prematurely reveals the correct answers in the UI. Only user-driven frontend actions (e.g., `submitExamAction`) may transition an exam to `'COMPLETED'`.
 - **LLM Output Validation:** When parsing structured JSON outputs from AI models (e.g., exam questions) inside background jobs, you must validate that the array is non-empty before performing database inserts. If the array is empty or invalid, throw an error to fail the job rather than letting it complete silently.
+
+## TypeScript Strictness (No Explicit Any)
+
+Never use `any` or implicitly untyped empty arrays (e.g., `const items = []`). Always explicitly define the type (e.g., `const items: string[] = []`) or create interfaces to prevent `@typescript-eslint/no-explicit-any` and `TS7034` CI failures.
+
+## Cognitive Complexity Limit (SonarCloud)
+
+Keep function cognitive complexity strictly below 15 (SonarCloud standard). If a function or Next.js action grows beyond this limit, you must extract chunks of logic into smaller, well-named helper functions or dedicated feature services (e.g., `features/<name>/services/`).
+
+## Secure Randomness
+
+Always use `crypto.getRandomValues()` (Web Crypto API or `node:crypto`) instead of `Math.random()` when generating random values, tokens, or handling any form of "industry-grade" randomness.
+
+## Top-Level Await (ESM)
+
+When writing or modifying ES Modules (e.g., `.mjs` files), utilize native top-level `await` instead of wrapping logic in async IIFEs (`async function run() { ... } run();`).

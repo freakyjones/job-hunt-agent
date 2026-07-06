@@ -5,7 +5,9 @@ import { logger } from '@job-hunt/logger';
 
 const fetchWithTelemetry = async (url: RequestInfo | URL, options?: RequestInit) => {
   const startTime = Date.now();
-  logger.debug(`[Supabase API] ${options?.method || 'GET'} ${url}`);
+  logger.debug(
+    `[Supabase API] ${options?.method || 'GET'} ${typeof url === 'object' ? JSON.stringify(url) : String(url)}`
+  );
 
   const response = await fetch(url, options);
   const duration = Date.now() - startTime;
@@ -18,7 +20,7 @@ const fetchWithTelemetry = async (url: RequestInfo | URL, options?: RequestInit)
       const errBody = await clonedRes.json();
       logger.error({ errBody, url, status: response.status }, `[Supabase Error Detail]`);
     } catch (e) {
-      // Ignore non-json responses
+      logger.error(e instanceof Error ? e.message : String(e));
     }
   }
 
@@ -44,10 +46,8 @@ export async function createClient() {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
             );
-          } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+          } catch (e) {
+            logger.error(e instanceof Error ? e.message : String(e));
           }
         },
       },

@@ -1,6 +1,6 @@
 import pino from 'pino';
 
-const isBrowser = typeof window !== 'undefined';
+const isBrowser = typeof globalThis.window !== 'undefined';
 
 export const logger = pino({
   level: process.env.LOG_LEVEL || 'info',

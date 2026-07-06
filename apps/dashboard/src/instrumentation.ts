@@ -1,7 +1,7 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs' && process.env.NODE_ENV === 'development') {
     // Prevent multiple tunnels in hot-reload
-    if (!(global as any).__ngrok_listener) {
+    if (!(globalThis as any).__ngrok_listener) {
       try {
         const ngrok = await import('@ngrok/ngrok');
         const listener = await ngrok.forward({
@@ -10,7 +10,7 @@ export async function register() {
         });
 
         const tunnelUrl = listener.url();
-        (global as any).__ngrok_listener = listener;
+        (globalThis as any).__ngrok_listener = listener;
 
         console.log(`\n🚀 Ingress established! Public proxy URL: ${tunnelUrl}`);
         console.log(`👉 Live telemetry endpoint: ${tunnelUrl}/api/webhooks/telemetry\n`);
@@ -22,7 +22,7 @@ export async function register() {
         const telemetryToken = process.env.TELEMETRY_SECRET_TOKEN || 'local-dev-secret';
 
         console.log(`[Supabase API] Setting NEXTJS_TELEMETRY_URL in Supabase remote project...`);
-        const { exec } = require('child_process');
+        const { exec } = require('node:child_process');
         exec(
           `npx supabase secrets set NEXTJS_TELEMETRY_URL=${tunnelUrl}/api/webhooks/telemetry NEXTJS_TELEMETRY_TOKEN=${telemetryToken} --project-ref mcwarivltkjplzezkvgu`,
           (err: any) => {

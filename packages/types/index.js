@@ -19,7 +19,7 @@ exports.SubmitExamPayloadSchema =
   exports.JobStatus =
     void 0;
 const zod_1 = require('zod');
-var JobStatus;
+let JobStatus;
 (function (JobStatus) {
   JobStatus['PENDING'] = 'PENDING';
   JobStatus['EVALUATED'] = 'EVALUATED';
@@ -83,7 +83,7 @@ exports.CompanySignalSchema = zod_1.z.object({
   published_at: zod_1.z.string().nullable().optional(),
   created_at: zod_1.z.string().optional(),
 });
-var NetworkingLeadStatus;
+let NetworkingLeadStatus;
 (function (NetworkingLeadStatus) {
   NetworkingLeadStatus['PENDING'] = 'PENDING';
   NetworkingLeadStatus['REVIEWED'] = 'REVIEWED';
@@ -100,7 +100,7 @@ exports.NetworkingLeadSchema = zod_1.z.object({
   status: exports.NetworkingLeadStatusEnum,
   created_at: zod_1.z.string().optional(),
 });
-var ExamStatus;
+let ExamStatus;
 (function (ExamStatus) {
   ExamStatus['PENDING'] = 'PENDING';
   ExamStatus['COMPLETED'] = 'COMPLETED';

@@ -21,7 +21,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
   },
 });
 
-async function main() {
+async function deleteAllUsers() {
   console.log('Fetching existing users...');
   const {
     data: { users },
@@ -52,11 +52,13 @@ async function main() {
   } else {
     console.log('No existing users found.');
   }
+}
 
-  console.log('Creating new user: abhilashpandey8170@gmail.com');
+async function createNewUser(email: string, password: string) {
+  console.log(`Creating new user: ${email}`);
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
-    email: 'abhilashpandey8170@gmail.com',
-    password: 'jobhunt123',
+    email,
+    password,
     email_confirm: true, // This auto-confirms the email!
   });
 
@@ -66,6 +68,11 @@ async function main() {
     console.log('Successfully created user!');
     console.log('User ID:', data.user.id);
   }
+}
+
+async function main() {
+  await deleteAllUsers();
+  await createNewUser('abhilashpandey8170@gmail.com', 'jobhunt123');
 }
 
 main();

@@ -7,9 +7,9 @@ import { createClient } from '@/utils/supabase/client';
 import { Spinner } from '@/features/core/components/Spinner';
 import styles from '../../../app/(dashboard)/exams/page.module.css';
 
-interface GenerateExamButtonProps {
-  jobs: Array<{ id: string; company: string; role: string }>;
-}
+type GenerateExamButtonProps = {
+  readonly jobs: Array<{ id: string; company: string; role: string }>;
+};
 
 export function GenerateExamButton({ jobs }: GenerateExamButtonProps) {
   const [loading, setLoading] = useState(false);
