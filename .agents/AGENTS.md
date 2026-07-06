@@ -93,3 +93,13 @@ When writing or modifying ES Modules (e.g., `.mjs` files), utilize native top-le
 
 - **Prevent Naming Collisions:** Always verify if an ENUM type, table, or relation name already exists across historical migration files before defining it in a new migration. This prevents `relation already exists` duplicate SQL errors during `supabase db reset` or `push`.
 - **Descriptive ENUM Naming:** Never use overly generic names for Postgres ENUM types (e.g., `job_status` or `status`). Always prefix them with their specific table or feature context (e.g., `exam_generation_job_status`) to prevent global namespace collisions.
+
+## Strict Linting & Type Invariants
+
+To ensure the CI pipeline (`pnpm run lint` and `pnpm run typecheck`) passes without immediate failure, you must adhere to these strict invariants:
+
+- **No `require()` Imports**: Never use `require()` (e.g., `require('node:child_process')`). Always use dynamic `await import()` in Edge/Node environments.
+- **Console Methods**: `console.log` is strictly forbidden by the `no-console` rule. You may only use `console.info`, `console.warn`, or `console.error`.
+- **Catch Block Variables**: If you do not use the error variable in a `catch` block, it must be prefixed with an underscore (e.g., `catch (_e)`) to satisfy the `@typescript-eslint/no-unused-vars` regex `/^_/u`.
+- **Type Guarding `unknown`**: When using `instanceof` on an error object (like `result.error instanceof Error`), you must cast it to `unknown` first if it comes from an untyped or loose source (e.g., `(result.error as unknown) instanceof Error`) to prevent `TS2358`.
+- **JSX Escaping**: Always escape apostrophes and quotes in React JSX (e.g., use `&apos;` instead of `'`).
