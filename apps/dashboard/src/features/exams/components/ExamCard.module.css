@@ -40,17 +40,17 @@
 
 .statusBadge[data-status='PENDING'] {
   background: rgba(241, 196, 15, 0.15);
-  color: #d49a00;
+  color: #8a6500;
 }
 
 .statusBadge[data-status='COMPLETED'] {
   background: rgba(46, 204, 113, 0.15);
-  color: #219653;
+  color: #156336;
 }
 
 .statusBadge[data-status='PROCESSING'] {
   background: rgba(52, 152, 219, 0.15);
-  color: #2d7ebc;
+  color: #1d537d;
 }
 
 .date {

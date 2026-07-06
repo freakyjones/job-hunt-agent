@@ -48,9 +48,12 @@ console.error = (...args: any[]) => {
   sendTelemetry(
     'error',
     args
-      .map((a) =>
-        typeof a === 'object' ? (a instanceof Error ? a.message : JSON.stringify(a)) : String(a)
-      )
+      .map((a) => {
+        if (typeof a === 'object') {
+          return a instanceof Error ? a.message : JSON.stringify(a);
+        }
+        return String(a);
+      })
       .join(' ')
   ).catch(() => {});
 };

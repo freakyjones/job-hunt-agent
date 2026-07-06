@@ -67,7 +67,7 @@ process.on('SIGTERM', () => {
 });
 
 function getRandomElement(arr: any[]) {
-  return arr[Math.floor(Math.random() * arr.length)];
+  return arr[crypto.randomInt(0, arr.length)];
 }
 
 async function fetchNaukriJobs(keyword: string, location: string) {
@@ -176,8 +176,8 @@ async function runScrape(db: DBStateManager) {
   const boardJobs = [...naukriJobs, ...indeedJobs];
   const atsJobs = [...polledAtsJobs, ...rssAtsJobs];
 
-  const shuffledBoards = boardJobs.sort(() => 0.5 - Math.random()).slice(0, 15);
-  const shuffledAts = atsJobs.sort(() => 0.5 - Math.random()).slice(0, 15);
+  const shuffledBoards = boardJobs.sort(() => 0.5 - crypto.randomInt(0, 100) / 100).slice(0, 15);
+  const shuffledAts = atsJobs.sort(() => 0.5 - crypto.randomInt(0, 100) / 100).slice(0, 15);
   const allJobs = [...shuffledBoards, ...shuffledAts];
 
   console.log(

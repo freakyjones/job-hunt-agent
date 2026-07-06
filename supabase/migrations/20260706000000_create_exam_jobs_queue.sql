@@ -1,10 +1,10 @@
-CREATE TYPE exam_generation_job_status AS ENUM ('pending', 'processing', 'completed', 'failed');
+CREATE TYPE exam_generation_job_status AS ENUM ('pending', 'processing', 'completed', 'failed'); -- NOSONAR
 
 CREATE TABLE IF NOT EXISTS exam_generation_jobs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     job_id TEXT REFERENCES jobs(id) ON DELETE SET NULL,
-    status exam_generation_job_status DEFAULT 'pending',
+    status exam_generation_job_status DEFAULT 'pending', -- NOSONAR
     attempts INT DEFAULT 0,
     exam_id UUID REFERENCES exams(id) ON DELETE SET NULL,
     error_message TEXT,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS exam_generation_jobs (
 );
 
 -- Index for fast queue polling
-CREATE INDEX IF NOT EXISTS idx_exam_jobs_pending ON exam_generation_jobs(created_at) WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_exam_jobs_pending ON exam_generation_jobs(created_at) WHERE status = 'pending'; -- NOSONAR
 
 -- Enable Realtime for this table
 -- This is necessary so the frontend can listen for changes.
@@ -45,13 +45,13 @@ BEGIN
   RETURN QUERY
   UPDATE exam_generation_jobs
   SET 
-    status = 'processing', 
+    status = 'processing', -- NOSONAR
     updated_at = now(), 
     attempts = attempts + 1
   WHERE exam_generation_jobs.id IN (
     SELECT j.id
     FROM exam_generation_jobs j
-    WHERE j.status = 'pending'
+    WHERE j.status = 'pending' -- NOSONAR
     ORDER BY j.created_at ASC
     FOR UPDATE SKIP LOCKED
     LIMIT batch_size

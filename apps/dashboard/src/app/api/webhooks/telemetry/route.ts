@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (_e) {
-    logger.error('Failed to parse incoming telemetry webhook');
+    logger.error({ error: String(_e) }, 'Failed to parse incoming telemetry webhook');
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
 }

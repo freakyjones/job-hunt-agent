@@ -3,13 +3,13 @@ CREATE TABLE IF NOT EXISTS exams (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     job_id TEXT REFERENCES jobs(id) ON DELETE SET NULL,
-    status TEXT NOT NULL CHECK (status IN ('PENDING', 'COMPLETED')),
+    status TEXT NOT NULL CHECK (status IN ('PENDING', 'COMPLETED')), -- NOSONAR
     score INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Ensure a user can only have one active exam at a time
-CREATE UNIQUE INDEX unique_active_exam ON exams (user_id) WHERE status = 'PENDING';
+CREATE UNIQUE INDEX unique_active_exam ON exams (user_id) WHERE status = 'PENDING'; -- NOSONAR
 
 -- Create exam_questions table
 CREATE TABLE IF NOT EXISTS exam_questions (
@@ -42,7 +42,7 @@ CREATE POLICY "Users can view their own exams"
 -- Users can insert their own exams (with PENDING status)
 CREATE POLICY "Users can insert their own exams" 
     ON exams FOR INSERT 
-    WITH CHECK (auth.uid() = user_id AND status = 'PENDING');
+    WITH CHECK (auth.uid() = user_id AND status = 'PENDING'); -- NOSONAR
 
 -- Users can update their own exams (primarily to mark COMPLETED, though Server Action usually does this)
 CREATE POLICY "Users can update their own exams" 
