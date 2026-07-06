@@ -88,3 +88,8 @@ Always use `crypto.getRandomValues()` (Web Crypto API or `node:crypto`) instead 
 ## Top-Level Await (ESM)
 
 When writing or modifying ES Modules (e.g., `.mjs` files), utilize native top-level `await` instead of wrapping logic in async IIFEs (`async function run() { ... } run();`).
+
+## Database Migration & Namespace Integrity
+
+- **Prevent Naming Collisions:** Always verify if an ENUM type, table, or relation name already exists across historical migration files before defining it in a new migration. This prevents `relation already exists` duplicate SQL errors during `supabase db reset` or `push`.
+- **Descriptive ENUM Naming:** Never use overly generic names for Postgres ENUM types (e.g., `job_status` or `status`). Always prefix them with their specific table or feature context (e.g., `exam_generation_job_status`) to prevent global namespace collisions.
