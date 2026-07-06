@@ -1,5 +1,5 @@
 import { JobsClient } from './JobsClient';
-import { getJobs } from '../services/jobs';
+import { getJobs, getRecentWorkflows } from '../services/jobs';
 import { redirect } from 'next/navigation';
 import { getBaseResume } from '@/features/profile/services/profile';
 import { createClient } from '@/utils/supabase/server';
@@ -7,8 +7,13 @@ import { createClient } from '@/utils/supabase/server';
 export async function JobsDataFetcher() {
   const jobsResultPromise = getJobs();
   const resumePromise = getBaseResume();
+  const workflowsResultPromise = getRecentWorkflows();
 
-  const [jobsResult, resumeResult] = await Promise.all([jobsResultPromise, resumePromise]);
+  const [jobsResult, resumeResult, workflowsResult] = await Promise.all([
+    jobsResultPromise,
+    resumePromise,
+    workflowsResultPromise,
+  ]);
 
   if (!resumeResult.data || !resumeResult.data.extracted_content) {
     redirect('/onboarding');
@@ -43,6 +48,7 @@ export async function JobsDataFetcher() {
         initialJobs={jobsResult.data || []}
         masterResume={masterResumeContent}
         isAnonymous={isAnonymous}
+        initialWorkflows={workflowsResult.data || []}
       />
     </>
   );

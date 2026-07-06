@@ -82,7 +82,10 @@ export class DBStateManager {
       .eq('user_id', this.userId);
 
     if (error) {
-      console.error(`Failed to update job ${jobId}:`, error.message);
+      console.error(
+        `Failed to update job ${jobId}:`,
+        error instanceof Error ? error.message : String(error)
+      );
     } else {
       console.log(`Updated job ${jobId} to status ${status}`);
     }

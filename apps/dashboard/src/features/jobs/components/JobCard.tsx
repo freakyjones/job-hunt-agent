@@ -14,7 +14,6 @@ export const JobCard = React.memo(function JobCard({
   masterResume,
   onUpdateStatus,
 }: JobCardProps) {
-  const isAutoApplicable = job.url?.includes('lever.co') || job.url?.includes('greenhouse.io');
   const isHighMatch = (job.score || 0) >= 80;
 
   return (
@@ -74,21 +73,12 @@ export const JobCard = React.memo(function JobCard({
           job.status === JobStatus.EVALUATED ||
           job.status === JobStatus.ERROR) && (
           <>
-            {isAutoApplicable ? (
-              <button
-                className="button button-secondary"
-                onClick={() => onUpdateStatus(job.id, JobStatus.ACCEPTED, job.status as JobStatus)}
-              >
-                Queue
-              </button>
-            ) : (
-              <button
-                className="button button-secondary"
-                onClick={() => onUpdateStatus(job.id, JobStatus.SAVED, job.status as JobStatus)}
-              >
-                Save
-              </button>
-            )}
+            <button
+              className="button button-secondary"
+              onClick={() => onUpdateStatus(job.id, JobStatus.SAVED, job.status as JobStatus)}
+            >
+              Save
+            </button>
             <button
               className="button button-secondary"
               onClick={() => onUpdateStatus(job.id, JobStatus.REJECTED, job.status as JobStatus)}
@@ -96,12 +86,6 @@ export const JobCard = React.memo(function JobCard({
               Reject
             </button>
           </>
-        )}
-
-        {job.status === JobStatus.ACCEPTED && (
-          <button className="button button-secondary" disabled style={{ opacity: 0.5 }}>
-            Queued
-          </button>
         )}
 
         {job.status === JobStatus.SAVED && (
@@ -116,11 +100,6 @@ export const JobCard = React.memo(function JobCard({
           </>
         )}
 
-        {job.status === JobStatus.APPLYING && (
-          <button className="button button-secondary" disabled style={{ opacity: 0.5 }}>
-            Applying
-          </button>
-        )}
         {job.status === JobStatus.APPLIED && (
           <button className="button button-secondary" disabled style={{ opacity: 0.5 }}>
             Applied

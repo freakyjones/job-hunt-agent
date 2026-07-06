@@ -1,28 +1,33 @@
 'use server';
 
 import { getJobs, updateJobStatus } from '../features/jobs/services/jobs';
-import { triggerScraperWorkflow } from '../features/jobs/services/github';
 import { getResumes } from '../features/resumes/services/resumes';
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/utils/supabase/server';
-
-async function verifyAuth() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    throw new Error('Unauthorized');
-  }
-}
+import { verifyAuth, incrementActionLimit } from '../features/core/services/auth';
+import {
+  triggerGitHubActionService,
+  triggerNetworkingActionService,
+  dismissWorkflowRunService,
+} from '../features/jobs/services/workflow';
 
 export async function getResumesAction() {
   try {
     await verifyAuth();
     const result = await getResumes();
     if (result.error) {
-      console.error('[Action: getResumesAction] Error:', result.error);
-      return { success: false, error: result.error };
+      console.error(
+        '[Action: getResumesAction] Error:',
+        (result.error as unknown) instanceof Error
+          ? (result.error as unknown as Error).message
+          : String(result.error)
+      );
+      return {
+        success: false,
+        error:
+          (result.error as unknown) instanceof Error
+            ? (result.error as unknown as Error).message
+            : String(result.error),
+      };
     }
     return { success: true, data: result.data };
   } catch (e: unknown) {
@@ -36,11 +41,8 @@ export async function getJobsAction() {
     const data = await getJobs();
     return { success: true, data };
   } catch (e: unknown) {
-    if (e instanceof Error) {
-      console.error('[Action: getJobsAction] Error:', e.message);
-      return { success: false, error: e.message };
-    }
-    return { success: false, error: 'Unknown error' };
+    console.error('[Action: getJobsAction] Error:', e instanceof Error ? e.message : String(e));
+    return { success: false, error: e instanceof Error ? e.message : 'Unknown error' };
   }
 }
 
@@ -51,94 +53,100 @@ export async function updateJobStatusAction(id: string, newStatusStr: string) {
     revalidatePath('/jobs');
     return { success: true };
   } catch (e: unknown) {
-    if (e instanceof Error) {
-      console.error('[Action: updateJobStatusAction] Error:', e.message);
-      return { success: false, error: e.message };
-    }
-    return { success: false, error: 'Unknown error' };
+    console.error(
+      '[Action: updateJobStatusAction] Error:',
+      e instanceof Error ? e.message : String(e)
+    );
+    return { success: false, error: e instanceof Error ? e.message : 'Unknown error' };
   }
 }
 
 export async function triggerGitHubAction(command: string = 'all') {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    await verifyAuth();
+    const user = await verifyAuth();
 
     // Check and increment rate limit via RPC
-    const { data: limitCheck, error: limitError } = await supabase.rpc('increment_action_limit');
-    if (limitError || !limitCheck) {
+    const limitResult = await incrementActionLimit();
+    if (!limitResult.success) {
       return {
         success: false,
-        error: 'Daily manual trigger limit reached (max 2/day). Please try again tomorrow.',
+        error: limitResult.error,
       };
     }
 
-    await triggerScraperWorkflow('job_hunt.yml', command, user?.id, user?.email);
+    const workflowResult = await triggerGitHubActionService(command, user.id, user.email);
+    if (workflowResult.error) {
+      return {
+        success: false,
+        error:
+          workflowResult.error instanceof Error
+            ? workflowResult.error.message
+            : String(workflowResult.error),
+      };
+    }
+
     return { success: true };
   } catch (e: unknown) {
-    if (e instanceof Error) {
-      console.error('[Action: triggerGitHubAction] Error:', e.message);
-      return { success: false, error: e.message };
-    }
-    return { success: false, error: 'Unknown error' };
+    console.error(
+      '[Action: triggerGitHubAction] Error:',
+      e instanceof Error ? e.message : String(e)
+    );
+    return { success: false, error: e instanceof Error ? e.message : 'Unknown error' };
   }
 }
 
 export async function triggerNetworkingAction() {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    await verifyAuth();
+    const user = await verifyAuth();
 
     // Check and increment rate limit via RPC
-    const { data: limitCheck, error: limitError } = await supabase.rpc('increment_action_limit');
-    if (limitError || !limitCheck) {
+    const limitResult = await incrementActionLimit();
+    if (!limitResult.success) {
       return {
         success: false,
-        error: 'Daily manual trigger limit reached (max 2/day). Please try again tomorrow.',
+        error: limitResult.error,
       };
     }
 
-    await triggerScraperWorkflow('networking-agent.yml', 'all', user?.id, user?.email);
+    const workflowResult = await triggerNetworkingActionService(user.id, user.email);
+    if (workflowResult.error) {
+      return {
+        success: false,
+        error:
+          workflowResult.error instanceof Error
+            ? workflowResult.error.message
+            : String(workflowResult.error),
+      };
+    }
+
     return { success: true };
   } catch (e: unknown) {
-    if (e instanceof Error) {
-      console.error('[Action: triggerNetworkingAction] Error:', e.message);
-      return { success: false, error: e.message };
-    }
-    return { success: false, error: 'Unknown error' };
+    console.error(
+      '[Action: triggerNetworkingAction] Error:',
+      e instanceof Error ? e.message : String(e)
+    );
+    return { success: false, error: e instanceof Error ? e.message : 'Unknown error' };
   }
 }
 
-import { dismissWorkflowRunService } from '../features/jobs/services/workflow';
-
 export async function dismissWorkflowRunAction(runId: number) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    await verifyAuth();
-
-    if (!user) {
-      return { success: false, error: 'Unauthorized' };
-    }
+    const user = await verifyAuth();
 
     const result = await dismissWorkflowRunService(runId, user.id);
     if (result.error) {
-      return { success: false, error: result.error.message };
+      return {
+        success: false,
+        error: result.error instanceof Error ? result.error.message : String(result.error),
+      };
     }
 
     return { success: true };
   } catch (e: unknown) {
-    if (e instanceof Error) {
-      return { success: false, error: e.message };
-    }
-    return { success: false, error: 'Unknown error' };
+    console.error(
+      '[Action: dismissWorkflowRunAction] Error:',
+      e instanceof Error ? e.message : String(e)
+    );
+    return { success: false, error: e instanceof Error ? e.message : 'Unknown error' };
   }
 }

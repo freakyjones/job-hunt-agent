@@ -39,10 +39,14 @@ export function TargetRolesEditor({
   if (initialRoles !== prevInitialRoles) {
     setPrevInitialRoles(initialRoles);
     setTargetRoles(initialRoles);
+  }
+
+  // Handle AI processing state transition when initial roles are loaded
+  useEffect(() => {
     if (initialRoles && initialRoles.length > 0) {
       setIsAiProcessing(false);
     }
-  }
+  }, [initialRoles, setIsAiProcessing]);
 
   // Subscribe to realtime updates for target_roles from the Edge Function
   useEffect(() => {

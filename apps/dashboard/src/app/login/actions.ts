@@ -43,7 +43,10 @@ export async function signup(_prevState: FormState, formData: FormData): Promise
     const { error } = await supabase.auth.signUp(data);
 
     if (error) {
-      console.error('Supabase signup error:', error.message);
+      console.error(
+        'Supabase signup error:',
+        error instanceof Error ? error.message : String(error)
+      );
       return { error: error.message, success: false };
     }
   } catch (err: unknown) {

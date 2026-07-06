@@ -77,7 +77,9 @@ describe('JobsClient', () => {
   });
 
   it('renders initial jobs in the correct tabs', () => {
-    render(<JobsClient initialJobs={mockJobs as any} masterResume="Resume" />);
+    render(
+      <JobsClient initialJobs={mockJobs as any} masterResume="Resume" initialWorkflows={[]} />
+    );
     // Active tab defaults to Inbox (PENDING)
     expect(screen.getByText('Frontend Developer')).toBeDefined();
     expect(screen.queryByText('Backend Developer')).toBeNull();
@@ -97,7 +99,9 @@ describe('JobsClient', () => {
     });
     vi.mocked(actions.updateJobStatusAction).mockReturnValue(actionPromise as any);
 
-    render(<JobsClient initialJobs={mockJobs as any} masterResume="Resume" />);
+    render(
+      <JobsClient initialJobs={mockJobs as any} masterResume="Resume" initialWorkflows={[]} />
+    );
 
     // In Inbox
     expect(screen.getByText('Frontend Developer')).toBeDefined();
@@ -122,7 +126,9 @@ describe('JobsClient', () => {
       error: 'DB Error',
     } as any);
 
-    render(<JobsClient initialJobs={mockJobs as any} masterResume="Resume" />);
+    render(
+      <JobsClient initialJobs={mockJobs as any} masterResume="Resume" initialWorkflows={[]} />
+    );
 
     // In Inbox
     expect(screen.getByText('Frontend Developer')).toBeDefined();
@@ -143,7 +149,9 @@ describe('JobsClient', () => {
   it('handles UNDO functionality correctly', async () => {
     vi.mocked(actions.updateJobStatusAction).mockResolvedValue({ success: true } as any);
 
-    render(<JobsClient initialJobs={mockJobs as any} masterResume="Resume" />);
+    render(
+      <JobsClient initialJobs={mockJobs as any} masterResume="Resume" initialWorkflows={[]} />
+    );
 
     // Intercept the toast render so we can click the UNDO button
     let toastContent: any;

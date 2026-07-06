@@ -2,7 +2,7 @@ import type { NextConfig } from 'next';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['pdfmake', 'pdfkit'],
+  serverExternalPackages: ['pdfmake', 'pdfkit', '@ngrok/ngrok'],
   async headers() {
     return [
       {

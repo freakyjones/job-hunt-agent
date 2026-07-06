@@ -67,3 +67,39 @@
 
 - **Workflow Dispatch Inputs:** Whenever a Next.js Server Action or frontend client manually triggers a GitHub Action workflow via the GitHub REST API (e.g., sending a payload with `command`, `user_id`), you MUST ensure that the target `.github/workflows/*.yml` file explicitly defines every parameter in the `inputs` section under the `workflow_dispatch` trigger. Unmapped inputs will cause a 422 API error.
 - **Node Version Consistency:** When creating or modifying GitHub Action workflows (`.github/workflows/`), always ensure the `actions/setup-node` version exactly matches the stable Node version used across the rest of the monorepo (e.g., Node 22). Do not rely on default boilerplate versions.
+
+## Exams & Background Jobs
+
+- **Exam Status Lifecycle (CRITICAL):** When a background worker or Edge Function generates a new exam, the `exams.status` MUST remain `'PENDING'`. Never automatically mark an exam as `'COMPLETED'` upon creation. Doing so breaks the Next.js frontend flow and prematurely reveals the correct answers in the UI. Only user-driven frontend actions (e.g., `submitExamAction`) may transition an exam to `'COMPLETED'`.
+- **LLM Output Validation:** When parsing structured JSON outputs from AI models (e.g., exam questions) inside background jobs, you must validate that the array is non-empty before performing database inserts. If the array is empty or invalid, throw an error to fail the job rather than letting it complete silently.
+
+## TypeScript Strictness (No Explicit Any)
+
+Never use `any` or implicitly untyped empty arrays (e.g., `const items = []`). Always explicitly define the type (e.g., `const items: string[] = []`) or create interfaces to prevent `@typescript-eslint/no-explicit-any` and `TS7034` CI failures.
+
+## Cognitive Complexity Limit (SonarCloud)
+
+Keep function cognitive complexity strictly below 15 (SonarCloud standard). If a function or Next.js action grows beyond this limit, you must extract chunks of logic into smaller, well-named helper functions or dedicated feature services (e.g., `features/<name>/services/`).
+
+## Secure Randomness
+
+Always use `crypto.getRandomValues()` (Web Crypto API or `node:crypto`) instead of `Math.random()` when generating random values, tokens, or handling any form of "industry-grade" randomness.
+
+## Top-Level Await (ESM)
+
+When writing or modifying ES Modules (e.g., `.mjs` files), utilize native top-level `await` instead of wrapping logic in async IIFEs (`async function run() { ... } run();`).
+
+## Database Migration & Namespace Integrity
+
+- **Prevent Naming Collisions:** Always verify if an ENUM type, table, or relation name already exists across historical migration files before defining it in a new migration. This prevents `relation already exists` duplicate SQL errors during `supabase db reset` or `push`.
+- **Descriptive ENUM Naming:** Never use overly generic names for Postgres ENUM types (e.g., `job_status` or `status`). Always prefix them with their specific table or feature context (e.g., `exam_generation_job_status`) to prevent global namespace collisions.
+
+## Strict Linting & Type Invariants
+
+To ensure the CI pipeline (`pnpm run lint` and `pnpm run typecheck`) passes without immediate failure, you must adhere to these strict invariants:
+
+- **No `require()` Imports**: Never use `require()` (e.g., `require('node:child_process')`). Always use dynamic `await import()` in Edge/Node environments.
+- **Console Methods**: `console.log` is strictly forbidden by the `no-console` rule. You may only use `console.info`, `console.warn`, or `console.error`.
+- **Catch Block Variables**: If you do not use the error variable in a `catch` block, it must be prefixed with an underscore (e.g., `catch (_e)`) to satisfy the `@typescript-eslint/no-unused-vars` regex `/^_/u`.
+- **Type Guarding `unknown`**: When using `instanceof` on an error object (like `result.error instanceof Error`), you must cast it to `unknown` first if it comes from an untyped or loose source (e.g., `(result.error as unknown) instanceof Error`) to prevent `TS2358`.
+- **JSX Escaping**: Always escape apostrophes and quotes in React JSX (e.g., use `&apos;` instead of `'`).

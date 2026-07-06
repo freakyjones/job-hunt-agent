@@ -9,6 +9,7 @@ export function Sidebar() {
   const isJobs = pathname ? pathname.startsWith('/jobs') : true;
   const isResumes = pathname ? pathname.startsWith('/resumes') : false;
   const isNetwork = pathname ? pathname.startsWith('/network') : false;
+  const isExams = pathname ? pathname.startsWith('/exams') : false;
 
   return (
     <aside className={styles.sidebar}>
@@ -34,6 +35,9 @@ export function Sidebar() {
           className={`${styles.navLink} ${isNetwork ? styles.navLinkActive : ''}`}
         >
           🤝 Network
+        </Link>
+        <Link href="/exams" className={`${styles.navLink} ${isExams ? styles.navLinkActive : ''}`}>
+          📝 Exams
         </Link>
       </nav>
     </aside>

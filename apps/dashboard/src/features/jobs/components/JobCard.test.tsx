@@ -81,7 +81,7 @@ describe('JobCard Component', () => {
     expect(screen.getByText('Failed to evaluate or apply.')).toBeDefined();
   });
 
-  it('fires onUpdateStatus with SAVED when Save is clicked for non-auto-applicable job', () => {
+  it('fires onUpdateStatus with SAVED when Save is clicked', () => {
     const evaluatedJob = { ...baseJob, status: 'EVALUATED', url: 'https://careers.google.com/job' };
     render(
       <JobCard
@@ -94,25 +94,6 @@ describe('JobCard Component', () => {
     const saveBtn = screen.getByText('Save');
     fireEvent.click(saveBtn);
     expect(mockUpdateStatus).toHaveBeenCalledWith('123', 'SAVED', 'EVALUATED');
-  });
-
-  it('fires onUpdateStatus with ACCEPTED when Queue is clicked for auto-applicable job', () => {
-    const autoApplyJob = {
-      ...baseJob,
-      status: 'EVALUATED',
-      url: 'https://boards.greenhouse.io/tech/123',
-    };
-    render(
-      <JobCard
-        job={autoApplyJob as any}
-        masterResume="My Resume"
-        onUpdateStatus={mockUpdateStatus}
-      />
-    );
-
-    const queueBtn = screen.getByText('Queue');
-    fireEvent.click(queueBtn);
-    expect(mockUpdateStatus).toHaveBeenCalledWith('123', 'ACCEPTED', 'EVALUATED');
   });
 
   it('fires onUpdateStatus with REJECTED when Reject is clicked', () => {

@@ -31,6 +31,7 @@
   "devDependencies": {
     "@job-hunt/eslint-config": "workspace:*",
     "@job-hunt/typescript-config": "workspace:*",
+    "@ngrok/ngrok": "^1.7.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20",

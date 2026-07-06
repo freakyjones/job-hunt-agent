@@ -1,4 +1,27 @@
 import { createAdminClient } from '@/utils/supabase/server';
+import { triggerScraperWorkflow } from './github';
+
+export async function triggerGitHubActionService(
+  command: string = 'all',
+  userId?: string,
+  userEmail?: string
+) {
+  try {
+    await triggerScraperWorkflow('job_hunt.yml', command, userId, userEmail);
+    return { data: { success: true } };
+  } catch (error) {
+    return { error: error instanceof Error ? error : new Error('Unknown error') };
+  }
+}
+
+export async function triggerNetworkingActionService(userId?: string, userEmail?: string) {
+  try {
+    await triggerScraperWorkflow('networking-agent.yml', 'all', userId, userEmail);
+    return { data: { success: true } };
+  } catch (error) {
+    return { error: error instanceof Error ? error : new Error('Unknown error') };
+  }
+}
 
 export async function dismissWorkflowRunService(runId: number, userId: string) {
   try {

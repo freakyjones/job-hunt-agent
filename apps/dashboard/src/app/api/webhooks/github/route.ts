@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       const run = payload.workflow_run;
 
       // Ignore non-agent workflow runs (like PR tests, lighthouse CI, etc.)
-      if (run.name !== 'Zero-Cost Job Hunt Agent' && run.name !== 'Networking Agent') {
+      if (run.name !== 'Zero-Cost Job Hunt Agent' && run.name !== 'Zero-Cost Networking Agent') {
         return NextResponse.json({ success: true, message: 'Ignored non-agent workflow run' });
       }
 
@@ -40,7 +40,10 @@ export async function POST(req: NextRequest) {
       );
 
       if (error) {
-        console.error('[Github Webhook] Database Error:', error.message);
+        console.error(
+          '[Github Webhook] Database Error:',
+          error instanceof Error ? error.message : String(error)
+        );
         return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
       }
     }

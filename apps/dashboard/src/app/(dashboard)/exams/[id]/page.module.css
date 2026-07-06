@@ -1,0 +1,55 @@
+.container {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.backLink {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.2s ease;
+}
+
+.backLink:hover {
+  color: var(--text-high-contrast);
+}
+
+.header {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-high-contrast);
+  margin: 0;
+}
+
+.jobContext {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.jobHighlight {
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.formWrapper {
+  background: transparent;
+}

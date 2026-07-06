@@ -8,6 +8,9 @@ import { updateJobStatusAction, triggerGitHubAction } from '@/app/actions';
 import { Job, JobStatus } from '@job-hunt/types';
 import { DashboardTabs, TabName } from './DashboardTabs';
 import { JobCard } from './JobCard';
+import { useWorkflowRuns } from '../hooks/useWorkflowRuns';
+import { WorkflowRun } from '../services/jobs';
+import { WorkflowStatusPanel } from './WorkflowStatusPanel';
 
 const RealtimeJobListener = dynamic(
   () => import('./RealtimeJobListener').then((mod) => mod.RealtimeJobListener),
@@ -18,10 +21,12 @@ export function JobsClient({
   initialJobs,
   masterResume,
   isAnonymous = false,
+  initialWorkflows,
 }: {
   initialJobs: Job[];
   masterResume: string;
   isAnonymous?: boolean;
+  initialWorkflows: WorkflowRun[];
 }) {
   const [optimisticJobs, addOptimisticJob] = useOptimistic(
     initialJobs,
@@ -32,6 +37,7 @@ export function JobsClient({
   const [, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<TabName>('inbox');
   const [isTriggering, setIsTriggering] = useState(false);
+  const workflows = useWorkflowRuns(initialWorkflows);
 
   const handleTrigger = async (command: string) => {
     setIsTriggering(true);
@@ -114,20 +120,22 @@ export function JobsClient({
           job.status === JobStatus.ERROR
         )
           acc.inbox.push(job);
-        else if (job.status === JobStatus.ACCEPTED || job.status === JobStatus.APPLYING)
-          acc.queue.push(job);
         else if (job.status === JobStatus.APPLIED) acc.applied.push(job);
         else if (job.status === JobStatus.REJECTED) acc.rejected.push(job);
-        else if (job.status === JobStatus.SAVED) acc.saved.push(job);
+        else if (
+          job.status === JobStatus.SAVED ||
+          job.status === JobStatus.ACCEPTED ||
+          job.status === JobStatus.APPLYING
+        )
+          acc.saved.push(job);
         return acc;
       },
-      { inbox: [], queue: [], applied: [], rejected: [], saved: [] } as Record<string, Job[]>
+      { inbox: [], applied: [], rejected: [], saved: [] } as Record<string, Job[]>
     );
   }, [optimisticJobs]);
 
   const displayJobs = useMemo(() => {
     if (activeTab === 'inbox') return groupedJobs.inbox;
-    if (activeTab === 'queue') return groupedJobs.queue;
     if (activeTab === 'applied') return groupedJobs.applied;
     if (activeTab === 'saved') return groupedJobs.saved;
     return groupedJobs.rejected;
@@ -136,13 +144,19 @@ export function JobsClient({
   return (
     <div className={styles.container}>
       <RealtimeJobListener />
+
+      {workflows.length > 0 && (
+        <div style={{ marginBottom: '40px' }}>
+          <WorkflowStatusPanel workflows={workflows} />
+        </div>
+      )}
+
       <div className={styles.header}>
         <DashboardTabs
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           counts={{
             inbox: groupedJobs.inbox.length,
-            queue: groupedJobs.queue.length,
             saved: groupedJobs.saved.length,
             applied: groupedJobs.applied.length,
             rejected: groupedJobs.rejected.length,

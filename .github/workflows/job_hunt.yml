@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # Allows manual trigger from the GitHub UI
     inputs:
       command:
-        description: 'Workflow to run (all, scrape, evaluate, apply)'
+        description: 'Workflow to run (all, scrape, evaluate)'
         required: false
         default: 'all'
       user_id:
@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Link User ID
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.user_id != '' }}
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://job-hunt-agent.vercel.app' }}
           CI_INTERNAL_TOKEN: ${{ secrets.CI_INTERNAL_TOKEN }}
@@ -34,7 +34,7 @@ jobs:
           curl -X POST "$NEXT_PUBLIC_APP_URL/api/webhooks/github/link-user" \
           -H "Authorization: Bearer $CI_INTERNAL_TOKEN" \
           -H "Content-Type: application/json" \
-          -d "{\"run_id\": ${{ github.run_id }}, \"user_id\": \"${{ github.event.inputs.user_id }}\", \"workflow_name\": \"${{ github.workflow }}\"}"
+          -d "{\"run_id\": ${{ github.run_id }}, \"user_id\": \"${{ github.event.inputs.user_id || secrets.ADMIN_USER_ID }}\", \"workflow_name\": \"${{ github.workflow }}\"}"
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
@@ -77,18 +77,7 @@ jobs:
         with:
           run: pnpm --filter job-hunt-agent run start evaluate
 
-      - name: Run Auto-Applier Workflow (Workflow C)
-        if: ${{ github.event_name == 'schedule' || github.event.inputs.command == 'all' || github.event.inputs.command == 'apply' }}
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          EMAIL_TO: ${{ github.event_name == 'schedule' && secrets.EMAIL_TO || github.event.inputs.user_email }}
-          TARGET_USER_ID: ${{ github.event.inputs.user_id || secrets.ADMIN_USER_ID }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        uses: GabrielBB/xvfb-action@v1
-        with:
-          run: pnpm --filter job-hunt-agent run start apply
+
 
       - name: Upload Playwright Screenshots
         uses: actions/upload-artifact@v4
