@@ -1,10 +1,10 @@
-CREATE TYPE job_status AS ENUM ('pending', 'processing', 'completed', 'failed');
+CREATE TYPE exam_generation_job_status AS ENUM ('pending', 'processing', 'completed', 'failed');
 
 CREATE TABLE IF NOT EXISTS exam_generation_jobs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     job_id TEXT REFERENCES jobs(id) ON DELETE SET NULL,
-    status job_status DEFAULT 'pending',
+    status exam_generation_job_status DEFAULT 'pending',
     attempts INT DEFAULT 0,
     exam_id UUID REFERENCES exams(id) ON DELETE SET NULL,
     error_message TEXT,
