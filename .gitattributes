@@ -1,0 +1,6 @@
+# GitHub Linguist overrides
+*.html linguist-detectable=false
+*.html linguist-vendored=true
+tests/** linguist-vendored=true
+apps/** linguist-detectable=true
+packages/** linguist-detectable=true
